@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/TirthrajRao/Stock/static/css/main.86f9f39d.chunk.css",
-    "main.js": "/TirthrajRao/Stock/static/js/main.18c23daf.chunk.js",
-    "main.js.map": "/TirthrajRao/Stock/static/js/main.18c23daf.chunk.js.map",
-    "runtime~main.js": "/TirthrajRao/Stock/static/js/runtime~main.fb48df0a.js",
-    "runtime~main.js.map": "/TirthrajRao/Stock/static/js/runtime~main.fb48df0a.js.map",
-    "static/js/2.cc40ad66.chunk.js": "/TirthrajRao/Stock/static/js/2.cc40ad66.chunk.js",
-    "static/js/2.cc40ad66.chunk.js.map": "/TirthrajRao/Stock/static/js/2.cc40ad66.chunk.js.map",
-    "index.html": "/TirthrajRao/Stock/index.html",
-    "precache-manifest.4af69cf80b540a3d40b7ea5366967a40.js": "/TirthrajRao/Stock/precache-manifest.4af69cf80b540a3d40b7ea5366967a40.js",
-    "service-worker.js": "/TirthrajRao/Stock/service-worker.js",
-    "static/css/main.86f9f39d.chunk.css.map": "/TirthrajRao/Stock/static/css/main.86f9f39d.chunk.css.map",
-    "static/media/Company-list.css": "/TirthrajRao/Stock/static/media/bgimage.de08db18.jpg"
+    "main.css": "/Stock-viewer/static/css/main.36030f4e.chunk.css",
+    "main.js": "/Stock-viewer/static/js/main.b3f5dcde.chunk.js",
+    "main.js.map": "/Stock-viewer/static/js/main.b3f5dcde.chunk.js.map",
+    "runtime~main.js": "/Stock-viewer/static/js/runtime~main.c8d0de04.js",
+    "runtime~main.js.map": "/Stock-viewer/static/js/runtime~main.c8d0de04.js.map",
+    "static/js/2.cc40ad66.chunk.js": "/Stock-viewer/static/js/2.cc40ad66.chunk.js",
+    "static/js/2.cc40ad66.chunk.js.map": "/Stock-viewer/static/js/2.cc40ad66.chunk.js.map",
+    "index.html": "/Stock-viewer/index.html",
+    "precache-manifest.7cf3b6d6170348226bab165a75817d31.js": "/Stock-viewer/precache-manifest.7cf3b6d6170348226bab165a75817d31.js",
+    "service-worker.js": "/Stock-viewer/service-worker.js",
+    "static/css/main.36030f4e.chunk.css.map": "/Stock-viewer/static/css/main.36030f4e.chunk.css.map",
+    "static/media/Company-list.css": "/Stock-viewer/static/media/bgimage.de08db18.jpg"
   }
 }
