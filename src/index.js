@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { HashRouter, Route } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -10,7 +10,7 @@ import Companylist from './components/Company-list';
 
 
 ReactDOM.render(
-  <Router>
+  <HashRouter>
   <div>
   <Route exact path='/' component={App} />
   <Route path='/create' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
@@ -23,7 +23,7 @@ ReactDOM.render(
           : (<Route component={Login} />)
         )} />
   </div>
-  </Router>,
+  </HashRouter>,
   document.getElementById('root')
   );
 

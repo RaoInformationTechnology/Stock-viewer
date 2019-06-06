@@ -399,7 +399,7 @@ class Companylist extends Component {
 					</Grid>
 					</Grid>
 					{this.state.companyData.map(company =>
-						<List key={company.key} className="cursorClass">
+						<List key={company.key} className="cursorClass vl">
 						<ListItem onClick={() =>this.handleClick(company)}>
 						<ListItemText primary={company.symbol} secondary={company.name}/>
 						<ListItemSecondaryAction>
@@ -449,7 +449,7 @@ class Companylist extends Component {
 					</Grid>
 					{this.state.companyData.map(company =>
 						<List key={company.key} >
-						<ListItem >
+						<ListItem className="vl">
 						<ListItemText primary={company.symbol} secondary={company.name}/>
 						<ListItemSecondaryAction>
 						<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
@@ -641,9 +641,9 @@ class Companylist extends Component {
 	}	
 
 	handleClick(data) {
-		this.setState({
-			isLoaded: false
-		})
+		// this.setState({
+		// 	// isLoaded: false
+		// })
 		console.log('data: ', data);
 		let grapharray = [];
 		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+data.symbol+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
@@ -676,7 +676,7 @@ class Companylist extends Component {
 					volume: grapharray['0'].volume,
 					clickCompanyName: data.name,
 					clickCompanySymbol: data.symbol,
-					isLoaded: true
+					// isLoaded: true
 				})
 			}
 
@@ -704,7 +704,7 @@ class Companylist extends Component {
 			localStorage.clear();
 			localStorage.removeItem('email1');
 			console.log(localStorage);
-			window.location.href="/"
+			window.location.hash="/"
 		}, function(error) {
 			console.error('Sign Out Error', error);
 		});
@@ -719,7 +719,7 @@ class Companylist extends Component {
 	openCompanyList(){
 		this.setState({isOpenCompanyList: false})
 		console.log("isOpenCompanyList:",this.state.isOpenCompanyList);
-		window.location.href='/Copmpany-list';
+		window.location.hash='/Copmpany-list';
 	}
 
 	render() {
