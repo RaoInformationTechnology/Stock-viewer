@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/Stock/static/css/main.599ddb91.chunk.css",
+    "main.js": "/Stock/static/js/main.ec6aff97.chunk.js",
+    "main.js.map": "/Stock/static/js/main.ec6aff97.chunk.js.map",
+    "runtime~main.js": "/Stock/static/js/runtime~main.a71eb1a4.js",
+    "runtime~main.js.map": "/Stock/static/js/runtime~main.a71eb1a4.js.map",
+    "static/js/2.cc40ad66.chunk.js": "/Stock/static/js/2.cc40ad66.chunk.js",
+    "static/js/2.cc40ad66.chunk.js.map": "/Stock/static/js/2.cc40ad66.chunk.js.map",
+    "index.html": "/Stock/index.html",
+    "precache-manifest.eed1c38779e94d92cf10d48a654a1047.js": "/Stock/precache-manifest.eed1c38779e94d92cf10d48a654a1047.js",
+    "service-worker.js": "/Stock/service-worker.js",
+    "static/css/main.599ddb91.chunk.css.map": "/Stock/static/css/main.599ddb91.chunk.css.map",
+    "static/media/Company-list.css": "/Stock/static/media/bgimage.de08db18.jpg"
+  }
+}
