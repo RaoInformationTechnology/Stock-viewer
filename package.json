@@ -2,7 +2,7 @@
   "name": "react-firestore",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://tirthrajrao.github.io/Stock-viewer/",
+  "homepage": "https://tirthrajrao.github.io/Stock-viewer",
   "dependencies": {
     "@material-ui/core": "^4.0.0",
     "@material-ui/icons": "^4.0.1",
@@ -10,6 +10,7 @@
     "axios": "^0.18.0",
     "d3-charts": "^0.0.11-0",
     "dispatch-event": "^1.0.0",
+    "eslint-plugin-flowtype": "^3.9.1",
     "firebase": "^6.0.1",
     "gh-pages": "^2.0.1",
     "react": "^16.8.6",
@@ -27,11 +28,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "predeploy": "yarn run build",
+    "deploy": "gh-pages -d build",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"

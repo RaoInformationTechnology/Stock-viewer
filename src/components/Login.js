@@ -66,7 +66,7 @@ class Login extends Component {
     .signInWithEmailAndPassword(email, password).then(()=>{
       localStorage.setItem('email1',email);
       console.log("login sucessfully");
-      window.location.href='/Company-list'
+      window.location.hash='/Company-list'
     }).catch((error) => {
       console.log('hey error: ', error);
       if(error.code === "auth/user-not-found"){
