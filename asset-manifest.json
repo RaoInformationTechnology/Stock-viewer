@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/Stock-viewer/static/css/main.36030f4e.chunk.css",
-    "main.js": "/Stock-viewer/static/js/main.b3f5dcde.chunk.js",
-    "main.js.map": "/Stock-viewer/static/js/main.b3f5dcde.chunk.js.map",
+    "main.js": "/Stock-viewer/static/js/main.f7fcc637.chunk.js",
+    "main.js.map": "/Stock-viewer/static/js/main.f7fcc637.chunk.js.map",
     "runtime~main.js": "/Stock-viewer/static/js/runtime~main.c8d0de04.js",
     "runtime~main.js.map": "/Stock-viewer/static/js/runtime~main.c8d0de04.js.map",
-    "static/js/2.cc40ad66.chunk.js": "/Stock-viewer/static/js/2.cc40ad66.chunk.js",
-    "static/js/2.cc40ad66.chunk.js.map": "/Stock-viewer/static/js/2.cc40ad66.chunk.js.map",
+    "static/js/2.7db997e0.chunk.js": "/Stock-viewer/static/js/2.7db997e0.chunk.js",
+    "static/js/2.7db997e0.chunk.js.map": "/Stock-viewer/static/js/2.7db997e0.chunk.js.map",
     "index.html": "/Stock-viewer/index.html",
-    "precache-manifest.7cf3b6d6170348226bab165a75817d31.js": "/Stock-viewer/precache-manifest.7cf3b6d6170348226bab165a75817d31.js",
+    "precache-manifest.3e2e19f8451b744db5c05181aace6822.js": "/Stock-viewer/precache-manifest.3e2e19f8451b744db5c05181aace6822.js",
     "service-worker.js": "/Stock-viewer/service-worker.js",
     "static/css/main.36030f4e.chunk.css.map": "/Stock-viewer/static/css/main.36030f4e.chunk.css.map",
     "static/media/Company-list.css": "/Stock-viewer/static/media/bgimage.de08db18.jpg"
