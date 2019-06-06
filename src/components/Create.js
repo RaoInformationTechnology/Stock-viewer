@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import firebase from '../Firebase';
-import "firebase/auth";
 import './login.css';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -132,7 +131,7 @@ class Create extends Component {
         />
         </Grid>
         <Grid item sm={12} xs={12}>
-        <Button color="primary"  variant="contained" size="large" onClick={(e)=>this.onSubmit(e)}>
+        <Button color="primary" disabled={!this.state.username || !this.state.email || !this.state.password} variant="contained" size="large" onClick={(e)=>this.onSubmit(e)}>
         SignUp
         </Button>
         </Grid>

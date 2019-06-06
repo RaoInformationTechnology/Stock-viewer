@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Login from './components/Login';
-import Suggestions from './components/Suggestions';
+import Companylist from './components/Company-list';
 
 
 class App extends Component {
@@ -18,7 +18,7 @@ class App extends Component {
         }else{
             return (
                 <div>
-                <Suggestions />
+                <Companylist />
                 </div>
                 );
         }

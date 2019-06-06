@@ -125,7 +125,7 @@ class Login extends Component {
       />
       </Grid>
       <Grid item sm={12} xs={12}>
-      <Button color="primary"  variant="contained" size="large" onClick={(event)=>this.handleSubmit(event)}>
+      <Button color="primary" disabled={!this.state.email || !this.state.password} variant="contained" size="large" onClick={(event)=>this.handleSubmit(event)}>
       Login
       </Button>
       </Grid>
