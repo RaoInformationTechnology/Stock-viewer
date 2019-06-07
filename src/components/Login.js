@@ -132,7 +132,7 @@ class Login extends Component {
       <Grid item sm={12}>
       <Divider />
       <div className="text-center">
-      New User? <Link to="/create"><Button color="primary">Sign Up</Button></Link>
+      New User? <Button color="primary"><Link to="/create">Sign Up</Link></Button>
       </div>
       </Grid>
       </Grid>

@@ -157,7 +157,6 @@ class Companylist extends Component {
 				.then((willDelete) => {
 					if(willDelete){
 						window.location.reload();
-
 					}
 				})
 			} else{
@@ -180,7 +179,14 @@ class Companylist extends Component {
 					email: email,
 					isLoaded: true
 				});
+				// this.displayCompanyList1()
 				console.log("name:",this.state.companyName + "symbol:",this.state.companySymbol);
+				// this.interval = setInterval(() => {
+				// 	// this.setState({isSearchClick: false})
+				// 	// console.log("isSearchClick===============>",this.state.isSearchClick);
+				// 	this.displayCompanyList1()
+				// }, 1000);
+				// this.componentDidMount();
 				window.location.reload();
 			})
 			.catch((error) => {
@@ -228,7 +234,7 @@ class Companylist extends Component {
 					size: 0,
 					style: 'full',
 				},
-				colors: ['red'],
+				colors: ['#ff4d4d'],
 				opacity: 0.4,
 				title: {
 					text: 'Stock Price Movement',
@@ -274,7 +280,7 @@ class Companylist extends Component {
 			},
 			]
 			var chartrender = <div id="chart">
-			<ReactApexChart options={options} series={series} type="area" height="400" />
+			<ReactApexChart options={options} series={series} type="area" height="500" />
 			<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
 			<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
 			<span style={{color:'gray'}}>High: </span> <span style = {{marginRight:10}}>{this.state.high}</span>
@@ -300,7 +306,7 @@ class Companylist extends Component {
 			<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
 			{chartrender ? chartrender : ''}
 			</div> : 'No data found')
-		var dispayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
+		var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
 			<List key={company.key} className="cursorClass">
 			<ListItem onClick={() =>this.handleClick(company)}>
 			<ListItemText primary={company.symbol} secondary={company.name}/>
@@ -311,7 +317,7 @@ class Companylist extends Component {
 			</ListItemSecondaryAction>
 			</ListItem>
 			</List>
-			)} </div> : <div> <p>Add Comapany to watchlist</p></div>
+			)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
 		var displayData =  this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
 		if(this.state.isOpenSearch && !this.state.isSearchClick){
 			console.log("===========if=======");
@@ -332,7 +338,7 @@ class Companylist extends Component {
 				<div className="company_list">
 
 				<Grid container spacing={1}>
-				<Grid item sm={8}>
+				<Grid item sm={10}>
 				<p style={{marginLeft: 18}}>Manage WatchList</p>
 				</Grid>
 				<Grid item sm={2}>
@@ -391,7 +397,7 @@ class Companylist extends Component {
 					<div className="company_list">
 
 					<Grid container spacing={12}>
-					<Grid item sm={8}>
+					<Grid item sm={10}>
 					<p style={{marginLeft: 18}}>Manage Watchlist</p>
 					</Grid>
 					<Grid item sm={2}>
@@ -440,7 +446,7 @@ class Companylist extends Component {
 					<div className="company_list">
 
 					<Grid container spacing={1}>
-					<Grid item sm={8}>
+					<Grid item sm={10}>
 					<p style={{marginLeft: 18}}>Manage Watchlist</p>
 					</Grid>
 					<Grid item sm={2}>
@@ -507,7 +513,7 @@ class Companylist extends Component {
 					<span style={{fontSize :28,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
 					<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
 					<div className="logout">
-					<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
+					<Link to ="/login"><Button variant="contained" onClick={()=>this.logOut()}>
 					<b>Logout</b>
 					</Button></Link>
 					</div>
@@ -526,7 +532,7 @@ class Companylist extends Component {
 					</Grid>
 					</Grid>
 					</div>
-					{dispayCompany}
+					{displayCompany}
 					</div>
 					<div className="graph_list">
 					{displayData}
@@ -538,6 +544,171 @@ class Companylist extends Component {
 
 		}
 	}	
+	
+	displayCompanyList1(){
+		const {date} = this.state;
+		if (this.state.grapharray.length) {
+			console.log('hey i m called');
+			let graphSeries = this.state.grapharray;
+			console.log("length:",graphSeries.length);
+			let ts2 = 1484418600000;
+			let graphData = [];
+			for (let i = 0; i < graphSeries.length; i++) {
+				ts2 = ts2 + 86400000;
+				let obj = JSON.parse(graphSeries[i].volume)
+				let innerArr = [ts2,obj];
+				graphData.push(innerArr);
+			}
+			console.log("graphData:",graphData);
+			let  options ={
+				chart: {
+					stacked: false,
+					zoom: {
+						type: 'x',
+						enabled: true
+					},
+					toolbar: {
+						autoSelected: 'zoom'
+					}
+				},
+				plotOptions: {
+					line: {
+						curve: 'smooth',
+					}
+				},
+				dataLabels: {
+					enabled: false
+				},
+
+				markers: {
+					size: 0,
+					style: 'full',
+				},
+				colors: ['#ff4d4d'],
+				opacity: 0.4,
+				title: {
+					text: 'Stock Price Movement',
+					align: 'left'
+				},
+				fill: {
+					type: 'gradient',
+					gradient: {
+						shadeIntensity: 1,
+						inverseColors: false,
+						opacityFrom: 0.5,
+						opacityTo: 0,
+						stops: [0, 90, 100]
+					},
+				},
+				yaxis: {
+					min: 0,
+					max: 250000,
+					labels: {
+						formatter: function (val) {
+							return (val).toFixed(0);
+						},
+					},
+					title: {
+						text: 'Price'
+					},
+				},
+				xaxis: {
+					type: 'datetime',
+				},
+				tooltip: {
+					shared: false,
+					y: {
+						formatter: function (val) {
+							return (val/1000).toFixed(0)
+						}
+					}
+				}
+			}
+			let series = [{
+				name: 'Stock price',
+				data: graphData
+			},
+			]
+			var chartrender = <div id="chart">
+			<ReactApexChart options={options} series={series} type="area" height="500" />
+			<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
+			<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
+			<span style={{color:'gray'}}>High: </span> <span style = {{marginRight:10}}>{this.state.high}</span>
+			<span style={{color:'gray'}}>Low: </span> <span style = {{marginRight:10}}>{this.state.low}</span>
+			<span style={{color:'gray'}}>Volume: </span> <span style = {{marginRight:10}}>{this.state.volume}</span>
+			</div>
+		}
+		var showGraphOrSearchResult = this.state.searchResponse.length ? <div>
+		<center><h3>Search Response....</h3></center>
+		{this.state.searchResponse.map(data =>	
+			<List key={data['1. symbol']} className="list">
+			<ListItem>
+			<ListItemText className="search_list" primary={data['1. symbol']} secondary={data['2. name']} />
+			<ListItemSecondaryAction className="search_list1">
+			<IconButton color="primary" edge="end" aria-label="Delete" onClick={() =>this.handleClick1(data)} className="addIcon">
+			<AddIcon/>
+			</IconButton>
+			</ListItemSecondaryAction>
+			</ListItem>
+			</List>
+			)}
+		</div> : (this.state.searchResponse ? <div>
+			<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
+			{chartrender ? chartrender : ''}
+			</div> : 'No data found')
+		var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
+			<List key={company.key} className="cursorClass">
+			<ListItem onClick={() =>this.handleClick(company)}>
+			<ListItemText primary={company.symbol} secondary={company.name}/>
+			<ListItemSecondaryAction>
+			<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
+			<RemoveCircle/>
+			</IconButton>
+			</ListItemSecondaryAction>
+			</ListItem>
+			</List>
+			)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
+		var displayData =  this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
+		
+			if(!this.state.isOpenCompanyList){
+				console.log("=====else ==========if");
+				return (
+					<div>
+					<div className="grid_class">
+					<span style={{fontSize :28,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
+					<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
+					<div className="logout">
+					<Link to ="/login"><Button variant="contained" onClick={()=>this.logOut()}>
+					<b>Logout</b>
+					</Button></Link>
+					</div>
+					</div>
+					<div className="grid_class1">
+					<div className="company_list">
+					<div className="plus_class">
+					<Grid container spacing={1}>
+					<Grid item sm={4}>
+					<IconButton color="primary" edge="end" aria-label="Delete" className="addIcon" onClick={()=>this.openSeachbar()}>
+					<AddIcon />
+					</IconButton>
+					</Grid>
+					<Grid item sm={8}>
+					<p><b>Manage WatchList</b></p>
+					</Grid>
+					</Grid>
+					</div>
+					{displayCompany}
+					</div>
+					<div className="graph_list">
+					{displayData}
+					</div>
+					</div>
+					</div>
+					)
+			
+
+		}
+	}
 
 	getApiData() {
 		console.log("value:",this.state.value);
@@ -641,9 +812,9 @@ class Companylist extends Component {
 	}	
 
 	handleClick(data) {
-		// this.setState({
-		// 	// isLoaded: false
-		// })
+		this.setState({
+			isLoaded: false
+		})
 		console.log('data: ', data);
 		let grapharray = [];
 		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+data.symbol+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
@@ -676,7 +847,7 @@ class Companylist extends Component {
 					volume: grapharray['0'].volume,
 					clickCompanyName: data.name,
 					clickCompanySymbol: data.symbol,
-					// isLoaded: true
+					isLoaded: true
 				})
 			}
 
@@ -734,19 +905,18 @@ class Companylist extends Component {
 		} else if(isLoaded){
 			if(this.state.companyData.length){
 				return(
-					<div>
+					<div className="main">
 					{this.displayCompanyList()}
 					{this.displayGraph()}
 					</div>
 					)
 			} else{
 				return(
-					<div>
+					<div className="main">
 					{this.displayCompanyList()}
 					</div>
 					)
 			}
-
 
 		} else{
 			return(
