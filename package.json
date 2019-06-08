@@ -7,6 +7,7 @@
     "@material-ui/core": "^4.0.0",
     "@material-ui/icons": "^4.0.1",
     "apexcharts": "^3.6.12",
+    "asyncawait": "^1.0.8",
     "axios": "^0.18.0",
     "d3-charts": "^0.0.11-0",
     "dispatch-event": "^1.0.0",

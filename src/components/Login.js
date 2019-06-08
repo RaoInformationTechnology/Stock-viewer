@@ -22,7 +22,8 @@ class Login extends Component {
       password: '',
       user: [],
       array:[],
-      hidden: true
+      hidden: true,
+      loginUser: ''
     };
     this.toggleShow = this.toggleShow.bind(this);
   }
@@ -64,6 +65,7 @@ class Login extends Component {
     firebase
     .auth()
     .signInWithEmailAndPassword(email, password).then(()=>{
+      this.setState({loginUser: email})
       localStorage.setItem('email1',email);
       console.log("login sucessfully");
       window.location.hash='/Company-list'

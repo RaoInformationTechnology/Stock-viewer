@@ -79,6 +79,11 @@ class Create extends Component {
     });
   };
 
+  isDisabled(){
+    if(!this.state.username || !this.state.password || !(this.state.password.length >='6'))
+    return true;  
+  }
+
   
     render() {
       const { email, password, username } = this.state;
@@ -99,7 +104,7 @@ class Create extends Component {
         value={username} 
         required
         onChange={this.onChange}
-        
+       
         />
         </Grid>
         <Grid item sm={12} xs={12}>
@@ -113,6 +118,7 @@ class Create extends Component {
         variant="outlined"
         value={email} 
         onChange={this.onChange}
+       
         required
         /> 
         </Grid>
@@ -127,11 +133,12 @@ class Create extends Component {
         variant="outlined"
         value={password}
         onChange={this.onChange}
+       
         required
         />
         </Grid>
         <Grid item sm={12} xs={12}>
-        <Button color="primary" disabled={!this.state.username || !this.state.email || !this.state.password} variant="contained" size="large" onClick={(e)=>this.onSubmit(e)}>
+        <Button color="primary" disabled={this.isDisabled()} variant="contained" size="large" onClick={(e)=>this.onSubmit(e)}>
         SignUp
         </Button>
         </Grid>
