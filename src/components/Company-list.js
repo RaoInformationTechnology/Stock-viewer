@@ -17,7 +17,6 @@ import AddIcon from '@material-ui/icons/Add';
 import RemoveCircle from '@material-ui/icons/RemoveCircle';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
-import throttle from 'lodash.throttle';
 
 class Companylist extends Component {
 
@@ -60,16 +59,9 @@ class Companylist extends Component {
 		this.getCompany = this.getCompany.bind(this);
 		this.handleClick = this.handleClick.bind(this);
 		this.openSeachbar = this.openSeachbar.bind(this);
-		// this.displayGraph = this.displayGraph.bind(this);
 		this.displayCompanyList = this.displayCompanyList.bind(this);
-		// this.displayCompanyListThrottled = throttle(this.displayCompanyList, 1000);
-  }
 
-  // componentWillUnmount() {
-  //   this.displayCompanyListThrottled.cancel();
-  // }
-
-	
+	}
 
 	handleChange(event) {
 		this.setState({value: event.target.value,searchValue: event.target.value});
@@ -186,6 +178,21 @@ class Companylist extends Component {
 				window.location.reload()
 			.catch((error) => {
 				// this.displayCompanyList()
+
+			// 	this.setState({
+			// 		name: this.state.companyName,
+			// 		symbol: this.state.companySymbol,
+			// 		email: email,
+			// 		isLoaded: true
+			// 	});
+			// 	console.log("isLoaded after:",this.state.isLoaded);
+			// 	console.log("name:",this.state.companyName + "symbol:",this.state.companySymbol);
+			// 	this.interval = setInterval(() => {
+			// 		window.location.reload();
+			// 	}, -1000);
+			// })
+			// .catch((error) => {
+
 				console.error("Error adding document: ", error);
 			})
 		}
@@ -605,6 +612,7 @@ class Companylist extends Component {
 					console.log("call");
 					displayGraph()
 				// }
+
 			}else{
 				return(
 					<div>
@@ -631,11 +639,12 @@ class Companylist extends Component {
 		var displayGraph = () => {
 			console.log("companyData before:",this.state.companyData);
 			console.log("companyData:",this.state.companyData);
-			let firstCompanySymbol = this.state.companyData[2];
+			let firstCompanySymbol = this.state.companyData[1];
 			console.log("firstCompanySymbol",firstCompanySymbol);
 			this.handleClick(firstCompanySymbol)
 		}
 	}	
+
 
 	deleteCompany(id){
 		firebase.firestore().collection('company').doc(id).delete().then(() => {
@@ -757,6 +766,8 @@ class Companylist extends Component {
 		// 	console.log('error: ', error);
 		// 	console.log('response: ', response);
 		// });
+		// swal("Click after a minute");
+		
 	}	
 
 	logOut(){
@@ -788,7 +799,7 @@ class Companylist extends Component {
 	}
 
 	render() {
-		console.log("render call");
+
 		const { isLoaded} = this.state;
 
 		if (!isLoaded) {
