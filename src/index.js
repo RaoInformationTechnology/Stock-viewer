@@ -7,6 +7,7 @@ import * as serviceWorker from './serviceWorker';
 import Create from './components/Create';
 import Login from './components/Login';
 import Companylist from './components/Company-list';
+import Demo from './components/demo';
 
 
 ReactDOM.render(
@@ -22,6 +23,7 @@ ReactDOM.render(
   <Route path='/Company-list' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
           : (<Route component={Login} />)
         )} />
+  <Route exact path='/demo' component={Demo} />
   </div>
   </HashRouter>,
   document.getElementById('root')

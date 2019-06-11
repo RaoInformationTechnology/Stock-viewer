@@ -49,7 +49,6 @@ class Login extends Component {
   }
 
   toggleShow() {
-    console.log("toggleshow");
     this.setState({ hidden: !this.state.hidden });
   }
   

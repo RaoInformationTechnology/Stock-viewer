@@ -7,7 +7,10 @@ import Grid from '@material-ui/core/Grid';
 import Divider from '@material-ui/core/Divider';
 import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
-
+import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
 class Create extends Component {
 
@@ -19,13 +22,19 @@ class Create extends Component {
       password: '',
       username: '',
       createdAt: '',
+      hidden: true,
     };
+    this.toggleShow = this.toggleShow.bind(this);
   }
   onChange = (e) => {
     const state = this.state
     state[e.target.name] = e.target.value;
     this.setState(state);
     console.log("state=============?",this.state.username);
+  }
+
+  toggleShow() {
+    this.setState({ hidden: !this.state.hidden });
   }
 
   onSubmit = (e) => {
@@ -126,15 +135,27 @@ class Create extends Component {
         <TextField
         id="outlined-password-input"
         label="Password"
-        type="password"
+        type={this.state.hidden ? "password" : "text"}
         name="password"
         autoComplete="current-password"
         margin="normal"
         variant="outlined"
         value={password}
         onChange={this.onChange}
-       
-        required
+        InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+          <IconButton
+          edge="end"
+          aria-label="Toggle password visibility"
+          onClick={this.toggleShow}
+          >
+          {password ? <VisibilityOff /> : <Visibility />}
+          </IconButton>
+          </InputAdornment>
+          ),
+      }}
+        
         />
         </Grid>
         <Grid item sm={12} xs={12}>
