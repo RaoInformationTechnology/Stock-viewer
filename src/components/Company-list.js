@@ -18,7 +18,13 @@ import RemoveCircle from '@material-ui/icons/RemoveCircle';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
-
+import MenuItem from '@material-ui/core/MenuItem';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
 
 class Companylist extends Component {
 
@@ -47,13 +53,28 @@ class Companylist extends Component {
 			high: '',
 			low: '',
 			volume: '',
+			historicalArray: [],
+			intervalArray: [],
+			historicalOpen: '',
+			historicalClose: '',
+			historicalHigh: '',
+			historicalLow: '',
+			historicalVolume: '',
+			historicalAdjClose: '',
+			values: '',
+			selectedInterval: '',
+			intervalRange: '',
 			clickCompanyName: '',
 			clickCompanySymbol: '',
 			isToggleOn: true,
 			isLoaded: false,
 			isSearchClick: false,
 			isOpenSearch: false,
-			isOpenCompanyList: false
+			isOpenCompanyList: false,
+			isSelectinterval: false,
+			isGraphDisplay: false,
+			isSelectHistorical: false,
+			isIntervalValue: false
 		};
 		this.handleClick1 = this.handleClick1.bind(this);
 		this.handleChange = this.handleChange.bind(this);
@@ -103,110 +124,226 @@ class Companylist extends Component {
 		this.addComapny();
 	}
 
-
-	getInfo = () => {
-		axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
-		.then(({ data }) => {
-			this.setState({
-				results: data.data
+	selectInterval =  prop => event => {
+		const intervalArray = [];
+		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, selectedInterval:prop});
+		console.log("event:",event.target.value);
+		console.log("prop:",prop);
+		if(event.target.value === 'MONTHLY'){
+			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url)
+			.then(res => res.json())
+			.then(res => {const originalObject = res['Monthly Time Series'];
+				for (let key in originalObject) {
+					intervalArray.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						volume: originalObject[key]['5. volume']
+					})
+				}
+				console.log("interval intervalArray",res);
+				console.log("intervalArray:",intervalArray);
+				this.displayCompanyList()
 			})
-		})
-	}
-
-	addComapny(){
-		if (this.state.companySymbol) {
-			console.log("addCompany2:",this.state.companySymbol);
-			return(
-				swal({
-					title: this.state.companySymbol,
-					text: this.state.companyName,
-					icon: "success",
-					dangerMode: true,
-				}).then((willDelete) => {
-					if(willDelete){
-						this.updateCompany(this.state.companyName)
-					} else{
-						console.log("no data found");
-					}
-				})
-				)
+		} else if(event.target.value === 'WEEKLY'){
+			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url)
+			.then(res => res.json())
+			.then(res => {const originalObject = res['Weekly Time Series'];
+				for (let key in originalObject) {
+					intervalArray.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						volume: originalObject[key]['5. volume']
+					})
+				}console.log("interval intervalArray",this.state.intervalArray);
+				this.displayCompanyList()
+			})	
+		} else{
+			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval="+event.target.value+"&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url)
+			.then(res => res.json())
+			.then(res => {const originalObject = res['Time Series ('+event.target.value+')'];
+				for (let key in originalObject) {
+					intervalArray.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						volume: originalObject[key]['5. volume']
+					})
+				}	console.log("interval intervalArray",this.state.intervalArray);
+				this.displayCompanyList()
+			})
 		}
-	}
+		this.setState({isIntervalValue: true})
+		// console.log('grapharray: ', grapharray);
+		// console.log("open:",grapharray['0'].open);
+		// console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
+		// this.setState({
+			// 	grapharray: grapharray,
+			// 	open: grapharray['0'].open,
+			// 	close: grapharray['0'].close,
+			// 	high: grapharray['0'].high, 	low: grapharray['0'].low,
+			// 	volume: grapharray['0'].volume,
+			// 	clickCompanyName: data.name,
+			// 	clickCompanySymbol: data.symbol,
+			// 	isLoaded: true,
+			// 	isGraphDisplay: true
+			// })
+			// console.log("isGraphDisplay after======>",this.state.isGraphDisplay);
+		};
 
-	updateCompany = (companyName) =>{
-		console.log('updatecompany:');
-		localStorage.getItem('email1')
-		let email = localStorage.email1;
-		console.log(companyName)
-		let companyData = [];
-		firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
-		.get()
-		.then(function(querySnapshot) {
-			console.log("querySnapshot",querySnapshot)
-			querySnapshot.forEach(function(doc) {
-				const { name, email } = doc.data();
-				console.log("data:",doc.data())
-				companyData.push({
-					key: doc.id,
-					doc,
-					name,
-					email,
-				});
-			});
-			console.log("data1:",companyData.length);
-			if (companyData.length) {
-				console.log('found data', companyData);
-				swal("Already added!","", "info")
-				.then((willDelete) => {
-					if(willDelete){
-						window.location.reload();
-						// afterAddCompanyResponse()
-					}
+		displaySelectedIntervalGraph(companySymbol){
+			console.log("companySymbol:",companySymbol);
+			console.log("prop after:",this.state.selectedInterval);
+
+		}
+
+		getInfo = () => {
+			axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
+			.then(({ data }) => {
+				this.setState({
+					results: data.data
 				})
-			} else{
-				console.log("new company");
-				addCompany1()
-			}
-		});
+			})
+		}
 
-		let addCompany1 = () =>{
+		displayHistoricalData(companySymbol){
+			// let historicalArray = []
+			console.log("companySymbol:",companySymbol);
+			axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB")
+			.then(({ data }) => {
+				console.log("isSelectHistorical:",this.state.isSelectHistorical);
+				console.log("data=======>",data['Time Series (Daily)']);
+				const originalObject = data['Time Series (Daily)'];
+				for (let key in originalObject) {
+					this.state.historicalArray.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						adjclose: originalObject[key]['5. adjusted close'], 
+						volume: originalObject[key]['6. volume']
+					})
+				}
+				console.log('grapharray: ', this.state.historicalArray);
+				console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
+				this.setState({isSelectHistorical: true})
+			})
+		}
+
+		addComapny(){
+			if (this.state.companySymbol) {
+				console.log("addCompany2:",this.state.companySymbol);
+				return(
+					swal({
+						title: this.state.companySymbol,
+						text: this.state.companyName,
+						icon: "success",
+						dangerMode: true,
+					}).then((willDelete) => {
+						if(willDelete){
+							this.updateCompany(this.state.companyName)
+						} else{
+							console.log("no data found");
+						}
+					})
+					)
+			}
+		}
+
+		updateCompany = (companyName) =>{
+			console.log('updatecompany:');
 			localStorage.getItem('email1')
 			let email = localStorage.email1;
-			console.log("isLoaded before:",this.state.isLoaded);
-			this.ref.add({
-				symbol:this.state.companySymbol,
-				name:this.state.companyName,
-				email: email
-			}).then((docRef) => {
-				window.location.reload();
-				// afterAddCompanyResponse()
-			})
-			.catch((error) => {
-				console.error("Error adding document: ", error);
-			})
-		}
+			console.log(companyName)
+			let companyData = [];
+			firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
+			.get()
+			.then(function(querySnapshot) {
+				console.log("querySnapshot",querySnapshot)
+				querySnapshot.forEach(function(doc) {
+					const { name, email } = doc.data();
+					console.log("data:",doc.data())
+					companyData.push({
+						key: doc.id,
+						doc,
+						name,
+						email,
+					});
+				});
+				console.log("data1:",companyData.length);
+				if (companyData.length) {
+					console.log('found data', companyData);
+					swal("Already added!","", "info")
+					.then((willDelete) => {
+						if(willDelete){
+							window.location.reload();
+						}
+					})
+				} else{
+					console.log("new company");
+					addCompany1()
+				}
+			});
 
-		// var afterAddCompanyResponse  = () =>{
-			// 	console.log("afterAddCompanyResponse");
-			
-			
-			// }
+			let addCompany1 = () =>{
+				localStorage.getItem('email1')
+				let email = localStorage.email1;
+				console.log("isLoaded before:",this.state.isLoaded);
+				this.ref.add({
+					symbol:this.state.companySymbol,
+					name:this.state.companyName,
+					email: email
+				}).then((docRef) => {
+					window.location.reload();
+				})
+				.catch((error) => {
+					console.error("Error adding document: ", error);
+				})
+			}
+
 		}
 
 		displayCompanyList(){
 			const {date} = this.state;
 			const ranges = [
 			{
-				value: '0-20',
-				label: '0 to 20',
+				value: '1min',
+				label: '1 min',
 			},
 			{
-				value: '21-50',
-				label: '21 to 50',
+				value: '5min',
+				label: '5 mins',
 			},
 			{
-				value: '51-100',
-				label: '51 to 100',
+				value: '15min',
+				label: '15 mins',
+			},
+			{
+				value: '30min',
+				label: '30 mins',
+			},
+			{
+				value: '60min',
+				label: '1 hour',
+			},
+			{
+				value: 'WEEKLY',
+				label: '1 week',
+			},
+			{
+				value: 'MONTHLY',
+				label: '1 month',
 			},
 			];
 			if (this.state.grapharray.length) {
@@ -291,7 +428,8 @@ class Companylist extends Component {
 					data: graphData
 				},
 				]
-				var chartrender = <div id="chart">
+				var chartrender = 
+				<div id="chart">
 				<ReactApexChart options={options} series={series} type="area" height="450" />
 				<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
 				<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
@@ -316,7 +454,55 @@ class Companylist extends Component {
 				)}
 			</div> : (this.state.searchResponse ? <div>
 				<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
-				{chartrender ? chartrender : ''}
+				{this.state.isGraphDisplay ? (<span>
+					<TextField
+					select
+					style={{float:'right'}}
+					value={this.state.values.intervalRange}
+					onChange={this.selectInterval(this.state.clickCompanySymbol)}
+					onClick={() =>this.displaySelectedIntervalGraph(this.state.clickCompanySymbol)}
+					InputProps={{
+						startAdornment: <InputAdornment position="start">Interval</InputAdornment>,
+					}}
+					>
+					{ranges.map(option => (
+						<MenuItem key={option.value} value={option.value}>
+						{option.label}
+						</MenuItem>
+						))}
+					</TextField><span className="historical_data"  onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
+					</span>) : ('')}
+				{this.state.isSelectHistorical ? (<div >
+					<Paper >
+					<Table  size="small">
+					<TableHead>
+					<TableRow>
+					<TableCell>Date</TableCell>
+					<TableCell align="right">Open</TableCell>
+					<TableCell align="right">High</TableCell>
+					<TableCell align="right">Low</TableCell>
+					<TableCell align="right">Close</TableCell>
+					<TableCell align="right">Adj Close</TableCell>
+					<TableCell align="right">Volume</TableCell>
+					</TableRow>
+					</TableHead>
+					<TableBody>
+					{this.state.historicalArray.map(historicalData => (
+						<TableRow >
+						<TableCell component="th" scope="row">{historicalData.date}</TableCell>
+						<TableCell align="right">{historicalData.open}</TableCell>
+						<TableCell align="right">{historicalData.high}</TableCell>
+						<TableCell align="right">{historicalData.low}</TableCell>
+						<TableCell align="right">{historicalData.close}</TableCell>
+						<TableCell align="right">{historicalData.adjclose}</TableCell>
+						<TableCell align="right">{historicalData.volume}</TableCell>
+						</TableRow>
+						))}
+					</TableBody>
+					</Table>
+					</Paper>
+					</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{chartrender}</div> : chartrender}</div>  : ''}</div>)}
+				
 				</div> : 'No data found')
 			var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
 				<List key={company.key} className="cursorClass">
@@ -635,6 +821,7 @@ class Companylist extends Component {
 					}
 					console.log('grapharray: ', grapharray);
 					console.log("open:",grapharray['0'].open);
+					console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
 					this.setState({
 						grapharray: grapharray,
 						open: grapharray['0'].open,
@@ -644,72 +831,17 @@ class Companylist extends Component {
 						volume: grapharray['0'].volume,
 						clickCompanyName: data.name,
 						clickCompanySymbol: data.symbol,
-						isLoaded: true
+						isLoaded: true,
+						isGraphDisplay: true
 					})
+					console.log("isGraphDisplay after======>",this.state.isGraphDisplay);
 				}
 
 			}).catch((error )=> {console.log('hello error: ', error)
 			this.setState({isLoaded: true})
-			// return(
-			// 	<div>
-			// 	<div className="grid_class">
-			// 	<span style={{fontSize :25,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
-			// 	<div className="logout">
-			// 	<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
-			// 	<b>Logout</b>
-			// 	</Button></Link>
-			// 	</div>
-			// 	</div>
-			// 	{this.addComapny()}
-			// 	<div className="grid_class1">
-			// 	<div className="company_list">
-
-			// 	<Grid container spacing={1}>
-			// 	<Grid item sm={10}>
-			// 	<p style={{marginLeft: 18}}>Manage Watchlist</p>
-			// 	</Grid>
-			// 	<Grid item sm={2}>
-			// 	<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5',cursor:'pointer'}}>Done</p>
-			// 	</Grid>
-			// 	</Grid>
-			// 	{this.state.companyData.map(company =>
-			// 		<List key={company.key} >
-			// 		<ListItem className="vl">
-			// 		<ListItemText primary={company.symbol} secondary={company.name}/>
-			// 		<ListItemSecondaryAction>
-			// 		<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
-			// 		<RemoveCircle/>
-			// 		</IconButton>
-			// 		</ListItemSecondaryAction>
-			// 		</ListItem>
-			// 		</List>
-			// 		)}
-			// 	</div>	
-			// 	<div className="search_bar">
-			// 	<Typography variant="h6" noWrap>
-			// 	<TextField
-			// 	id="outlined-with-placeholder"
-			// 	label="Search"
-			// 	className="search_input"
-			// 	value={this.state.value}
-			// 	onChange={this.handleChange} 
-			// 	margin="normal"
-			// 	variant="outlined"
-			// 	/>
-			// 	<Button className="search_button" id="search" disabled={!this.state.value} onClick={this.handleSubmit} style={{color:'#fff'}} autoFocus>
-			// 	Search
-			// 	</Button>
-			// 	</Typography>
-			// 	<center><div className="searchCompany_list">
-			// 	Click for graph after a minute
-			// 	</div>	</center>
-			// 	</div>		
-			// 	</div>
-			// 	</div>
-			// 	)
 		});
-
 		}	
+
 		logOut(){
 			firebase
 			.auth()
@@ -760,7 +892,7 @@ class Companylist extends Component {
 					console.log('found data==========>', companyData);
 					setTheState(companyData);
 					console.log("call");
-					displayGraph()
+					// displayGraph()
 				}else{
 					return(
 						<div>
@@ -784,17 +916,17 @@ class Companylist extends Component {
 					isLoaded: true
 				})
 			}
-			var displayGraph = () => {
-						console.log("companyData before:",this.state.companyData);
-						console.log("companyData:",this.state.companyData);
-						let firstCompanySymbol = this.state.companyData[1];
-						console.log("firstCompanySymbol",firstCompanySymbol);
-						this.handleClick(firstCompanySymbol)
-					}
+			// var displayGraph = () => {
+				// 			console.log("companyData before:",this.state.companyData);
+				// 			console.log("companyData:",this.state.companyData);
+				// 			let firstCompanySymbol = this.state.companyData[1];
+				// 			console.log("firstCompanySymbol",firstCompanySymbol);
+				// 			this.handleClick(firstCompanySymbol)
+				// 		}
 			}	
 
 
-			
+
 
 			render() {
 

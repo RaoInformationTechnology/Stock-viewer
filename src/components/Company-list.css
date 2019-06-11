@@ -202,6 +202,13 @@ Card{
   padding-top: 0!important;
   padding-bottom: 0!important;
 }
+.historical_data{
+  float: right;
+  color: rgb(0, 129, 242);
+  margin-right: 20px;
+  margin-top: 10px;
+  cursor: pointer; 
+}
 
 /*Swal*/
 .swal-button--danger {

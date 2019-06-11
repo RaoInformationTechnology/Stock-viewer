@@ -92,7 +92,6 @@ class Create extends Component {
     if(!this.state.username || !this.state.password || !(this.state.password.length >='6'))
     return true;  
   }
-
   
     render() {
       const { email, password, username } = this.state;

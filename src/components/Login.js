@@ -44,6 +44,7 @@ class Login extends Component {
       user
     });
   }
+  
   componentDidMount() {
     this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate);
   }

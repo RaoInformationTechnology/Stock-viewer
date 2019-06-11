@@ -132,3 +132,17 @@ function OutlinedInputAdornments() {
 }
 
 export default OutlinedInputAdornments;
+
+
+
+// historical Data
+// https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&apikey=demo
+
+// monthly
+// https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=MSFT&apikey=demo
+
+// weekly
+// https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=MSFT&apikey=demo
+
+// interval
+// https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&apikey=demo
