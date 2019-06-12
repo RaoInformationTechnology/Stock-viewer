@@ -55,6 +55,10 @@ class Companylist extends Component {
 			volume: '',
 			historicalArray: [],
 			intervalArray: [],
+			graphData: [],
+			intervalData: [],
+			comparisonArray1: [],
+			comparisonArray2: [],
 			historicalOpen: '',
 			historicalClose: '',
 			historicalHigh: '',
@@ -66,6 +70,7 @@ class Companylist extends Component {
 			intervalRange: '',
 			clickCompanyName: '',
 			clickCompanySymbol: '',
+			beforeComparison: '',
 			isToggleOn: true,
 			isLoaded: false,
 			isSearchClick: false,
@@ -124,18 +129,27 @@ class Companylist extends Component {
 		this.addComapny();
 	}
 
+	clearArray(){
+		console.log("clear array call");
+		this.setState({intervalArray:[]});
+	}
+
 	selectInterval =  prop => event => {
-		const intervalArray = [];
-		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, selectedInterval:prop});
+		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, selectedInterval:prop, graphData:[], intervalArray: []});
 		console.log("event:",event.target.value);
 		console.log("prop:",prop);
+		console.log("interval array=========>",this.state.intervalArray);
 		if(event.target.value === 'MONTHLY'){
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 			fetch(url)
 			.then(res => res.json())
-			.then(res => {const originalObject = res['Monthly Time Series'];
+			.then(res => {
+				const originalObject = res['Monthly Time Series'];
+				console.log('originalObject: ', originalObject);
+				console.log("interval array======second time===>",this.state.intervalArray);
 				for (let key in originalObject) {
-					intervalArray.push({
+					console.log('hey key: ', key);
+					this.state.intervalArray.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -145,8 +159,10 @@ class Companylist extends Component {
 					})
 				}
 				console.log("interval intervalArray",res);
-				console.log("intervalArray:",intervalArray);
-				this.displayCompanyList()
+				console.log("intervalArray:",this.state.intervalArray);
+				this.displayGraphOfInterval();
+				// this.clearArray();
+				
 			})
 		} else if(event.target.value === 'WEEKLY'){
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
@@ -154,7 +170,7 @@ class Companylist extends Component {
 			.then(res => res.json())
 			.then(res => {const originalObject = res['Weekly Time Series'];
 				for (let key in originalObject) {
-					intervalArray.push({
+					this.state.intervalArray.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -163,7 +179,8 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}console.log("interval intervalArray",this.state.intervalArray);
-				this.displayCompanyList()
+				this.displayGraphOfInterval();
+				// this.clearArray();
 			})	
 		} else{
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval="+event.target.value+"&apikey= Z51NHQ9W28LJMOHB";
@@ -171,7 +188,7 @@ class Companylist extends Component {
 			.then(res => res.json())
 			.then(res => {const originalObject = res['Time Series ('+event.target.value+')'];
 				for (let key in originalObject) {
-					intervalArray.push({
+					this.state.intervalArray.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -180,32 +197,120 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}	console.log("interval intervalArray",this.state.intervalArray);
-				this.displayCompanyList()
+				this.displayGraphOfInterval();
+
 			})
 		}
 		this.setState({isIntervalValue: true})
-		// console.log('grapharray: ', grapharray);
-		// console.log("open:",grapharray['0'].open);
-		// console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
-		// this.setState({
-			// 	grapharray: grapharray,
-			// 	open: grapharray['0'].open,
-			// 	close: grapharray['0'].close,
-			// 	high: grapharray['0'].high, 	low: grapharray['0'].low,
-			// 	volume: grapharray['0'].volume,
-			// 	clickCompanyName: data.name,
-			// 	clickCompanySymbol: data.symbol,
-			// 	isLoaded: true,
-			// 	isGraphDisplay: true
-			// })
-			// console.log("isGraphDisplay after======>",this.state.isGraphDisplay);
-		};
+	};
 
-		displaySelectedIntervalGraph(companySymbol){
-			console.log("companySymbol:",companySymbol);
-			console.log("prop after:",this.state.selectedInterval);
 
+	displayGraphOfInterval(){
+
+		console.log("inside function intervalArray=====>",this.state.intervalArray);
+		let graphSeries = this.state.intervalArray;
+		console.log("length of ========>:",graphSeries.length);
+		let ts2 = 1484418600000;
+		this.state.intervalData = [];
+		for (let i = 0; i < graphSeries.length; i++) {
+			ts2 = ts2 + 86400000;
+			let obj = JSON.parse(graphSeries[i].volume)
+			let innerArr = [ts2,obj];
+			this.state.intervalData.push(innerArr);
+		} 
+		
+		console.log("intervalData ===========>:",this.state.intervalData.length);
+		console.log("intervalArray ===========>:",this.state.intervalArray.length);
+		let  options ={
+			chart: {
+				stacked: false,
+				zoom: {
+					type: 'x',
+					enabled: true
+				},
+				toolbar: {
+					autoSelected: 'zoom'
+				}
+			},
+			plotOptions: {
+				line: {
+					curve: 'smooth',
+				}
+			},
+			dataLabels: {
+				enabled: false
+			},
+
+			markers: {
+				size: 0,
+				style: 'full',
+			},
+			colors: ['#ff4d4d'],
+			opacity: 0.4,
+			title: {
+				text: 'Stock Price Movement',
+				align: 'left'
+			},
+			fill: {
+				type: 'gradient',
+				gradient: {
+					shadeIntensity: 1,
+					inverseColors: false,
+					opacityFrom: 0.5,
+					opacityTo: 0,
+					stops: [0, 90, 100]
+				},
+			},
+			yaxis: {
+				min: 0,
+				max: 250000,
+				labels: {
+					formatter: function (val) {
+						return (val).toFixed(0);
+					},
+				},
+				title: {
+					text: 'Price'
+				},
+			},
+			xaxis: {
+				type: 'datetime',
+			},
+			tooltip: {
+				shared: false,
+				y: {
+					formatter: function (val) {
+						return (val/1000).toFixed(0)
+					}
+				}
+			}
 		}
+		let series = [{
+			name: 'Stock price',
+			type: 'area',
+			data: this.state.intervalData
+		}
+		]
+		console.log("before=========>",this.state.intervalData);
+		// this.setState({intervalData: []})
+		// console.log("after=========>",this.state.intervalData);
+		var chartrender = 
+		<div id="chart">
+		<ReactApexChart options={options} series={series} type="area" height="500"/>
+		</div>
+		return(<div>
+			{chartrender}
+			</div>
+			)
+
+		// this.setState({intervalArray:'',isIntervalValue: false,isLoaded:false})
+	}
+
+	// displaySelectedIntervalGraph(companySymbol){
+		// 	this.setState({intervalArray:[]})
+		// 	console.log("companySymbol:",companySymbol);
+		// 	console.log("prop after:",this.state.selectedInterval);
+		// }  
 
 		getInfo = () => {
 			axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
@@ -213,7 +318,7 @@ class Companylist extends Component {
 				this.setState({
 					results: data.data
 				})
-			})
+			}) 
 		}
 
 		displayHistoricalData(companySymbol){
@@ -314,6 +419,57 @@ class Companylist extends Component {
 
 		}
 
+		selectComparisonCompany = prop => event =>{
+			let comparisonOfVolume = []
+			console.log("companySymbol=============>",prop);
+			console.log("event=================>",event.target.value);
+			console.log("beforeComparison=======>",this.state.beforeComparison);
+			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+event.target.value+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url)
+			.then(res => res.json())
+			.then(res => {const originalObject = res['Time Series (5min)'];
+				console.log("res==========>",originalObject);
+				for (let key in originalObject) {
+					this.state.comparisonArray1.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						volume: originalObject[key]['5. volume']
+					})
+				}	
+				console.log("comparisonArray1=======>",this.state.comparisonArray1);
+				console.log("volume======>",this.state.comparisonArray1[0].volume);
+			});
+			const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+this.state.beforeComparison+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url1)
+			.then(res1 => res1.json())
+			.then(res1 => {const originalObjectforDisply = res1['Time Series (5min)'];
+				console.log("originalObject===========>",originalObjectforDisply);
+				for (let key in originalObjectforDisply) {
+					this.state.comparisonArray2.push({
+						date: key,
+						open: originalObjectforDisply[key]['1. open'],
+						high: originalObjectforDisply[key]['2. high'],
+						low: originalObjectforDisply[key]['3. low'],
+						close: originalObjectforDisply[key]['4. close'],
+						volume: originalObjectforDisply[key]['5. volume']
+					})
+				}	
+				console.log("comparisonArray2=======>",this.state.comparisonArray2);
+				console.log("volume=== second volume===>",this.state.comparisonArray2[0].volume);
+			});
+			for(let i=0; i<this.state.comparisonArray1.length; i++){
+				 comparisonOfVolume.push(this.state.comparisonArray1[i].volume -this.state.comparisonArray2[i].volume) ;
+			}
+			console.log("comparisonOfVolume==============>",comparisonOfVolume);
+		}
+		comparison(companySymbol){
+			console.log("companySymbol===>",companySymbol);
+			this.setState({beforeComparison: companySymbol})
+		}
+
 		displayCompanyList(){
 			const {date} = this.state;
 			const ranges = [
@@ -346,6 +502,7 @@ class Companylist extends Component {
 				label: '1 month',
 			},
 			];
+
 			if (this.state.grapharray.length) {
 				console.log('hey i m called');
 				let graphSeries = this.state.grapharray;
@@ -378,7 +535,6 @@ class Companylist extends Component {
 					dataLabels: {
 						enabled: false
 					},
-
 					markers: {
 						size: 0,
 						style: 'full',
@@ -460,7 +616,6 @@ class Companylist extends Component {
 					style={{float:'right'}}
 					value={this.state.values.intervalRange}
 					onChange={this.selectInterval(this.state.clickCompanySymbol)}
-					onClick={() =>this.displaySelectedIntervalGraph(this.state.clickCompanySymbol)}
 					InputProps={{
 						startAdornment: <InputAdornment position="start">Interval</InputAdornment>,
 					}}
@@ -471,8 +626,40 @@ class Companylist extends Component {
 						</MenuItem>
 						))}
 					</TextField><span className="historical_data"  onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
+					<TextField
+					select
+					style={{float:'right'}}
+					value={this.state.values.intervalRange}
+					onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
+					onClick ={() => this.comparison(this.state.clickCompanySymbol)}
+					InputProps={{
+						startAdornment: <InputAdornment position="start">Comparison</InputAdornment>,
+					}}
+					>
+					{this.state.companyData.map(company => (
+						<MenuItem key={company.symbol} value={company.symbol}>
+						{company.symbol}
+						</MenuItem>
+						))}
+					</TextField>
+					<TextField
+					select
+					style={{float:'right'}}
+					value={this.state.values.intervalRange}
+					onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
+					onClick ={() => this.comparison(this.state.clickCompanySymbol)}
+					InputProps={{
+						startAdornment: <InputAdornment position="start">Indicator</InputAdornment>,
+					}}
+					>
+					{this.state.companyData.map(company => (
+						<MenuItem key={company.symbol} value={company.symbol}>
+						{company.symbol}
+						</MenuItem>
+						))}
+					</TextField>
 					</span>) : ('')}
-				{this.state.isSelectHistorical ? (<div >
+				{this.state.isSelectHistorical ? (<div>
 					<Paper >
 					<Table  size="small">
 					<TableHead>
@@ -488,7 +675,7 @@ class Companylist extends Component {
 					</TableHead>
 					<TableBody>
 					{this.state.historicalArray.map(historicalData => (
-						<TableRow >
+						<TableRow>
 						<TableCell component="th" scope="row">{historicalData.date}</TableCell>
 						<TableCell align="right">{historicalData.open}</TableCell>
 						<TableCell align="right">{historicalData.high}</TableCell>
@@ -501,7 +688,7 @@ class Companylist extends Component {
 					</TableBody>
 					</Table>
 					</Paper>
-					</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{chartrender}</div> : chartrender}</div>  : ''}</div>)}
+					</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : chartrender}</div>  : ''}</div>)}
 				
 				</div> : 'No data found')
 			var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
