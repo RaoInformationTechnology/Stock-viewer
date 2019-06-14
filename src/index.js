@@ -23,7 +23,6 @@ ReactDOM.render(
   <Route path='/Company-list' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
           : (<Route component={Login} />)
         )} />
-  <Route exact path='/demo' component={Demo} />
   </div>
   </HashRouter>,
   document.getElementById('root')

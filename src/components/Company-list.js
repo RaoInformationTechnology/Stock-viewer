@@ -25,6 +25,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import Modal from '@material-ui/core/Modal';
 
 class Companylist extends Component {
 
@@ -53,12 +54,14 @@ class Companylist extends Component {
 			high: '',
 			low: '',
 			volume: '',
+			indicatorObj: '',
 			historicalArray: [],
 			intervalArray: [],
 			graphData: [],
 			intervalData: [],
 			comparisonArray1: [],
 			comparisonArray2: [],
+			indicatorDataArray: [],
 			historicalOpen: '',
 			historicalClose: '',
 			historicalHigh: '',
@@ -72,6 +75,8 @@ class Companylist extends Component {
 			clickCompanySymbol: '',
 			beforeComparison: '',
 			isToggleOn: true,
+			setOpen: false,
+			modalOpen: false,
 			isLoaded: false,
 			isSearchClick: false,
 			isOpenSearch: false,
@@ -129,11 +134,6 @@ class Companylist extends Component {
 		this.addComapny();
 	}
 
-	clearArray(){
-		console.log("clear array call");
-		this.setState({intervalArray:[]});
-	}
-
 	selectInterval =  prop => event => {
 		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, selectedInterval:prop, graphData:[], intervalArray: []});
 		console.log("event:",event.target.value);
@@ -161,7 +161,6 @@ class Companylist extends Component {
 				console.log("interval intervalArray",res);
 				console.log("intervalArray:",this.state.intervalArray);
 				this.displayGraphOfInterval();
-				// this.clearArray();
 				
 			})
 		} else if(event.target.value === 'WEEKLY'){
@@ -180,7 +179,6 @@ class Companylist extends Component {
 					})
 				}console.log("interval intervalArray",this.state.intervalArray);
 				this.displayGraphOfInterval();
-				// this.clearArray();
 			})	
 		} else{
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval="+event.target.value+"&apikey= Z51NHQ9W28LJMOHB";
@@ -203,7 +201,6 @@ class Companylist extends Component {
 		}
 		this.setState({isIntervalValue: true})
 	};
-
 
 	displayGraphOfInterval(){
 
@@ -304,408 +301,553 @@ class Companylist extends Component {
 			)
 
 		// this.setState({intervalArray:'',isIntervalValue: false,isLoaded:false})
+	}  
+
+	getInfo = () => {
+		axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
+		.then(({ data }) => {
+			this.setState({
+				results: data.data
+			})
+		}) 
 	}
 
-	// displaySelectedIntervalGraph(companySymbol){
-		// 	this.setState({intervalArray:[]})
-		// 	console.log("companySymbol:",companySymbol);
-		// 	console.log("prop after:",this.state.selectedInterval);
-		// }  
-
-		getInfo = () => {
-			axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
-			.then(({ data }) => {
-				this.setState({
-					results: data.data
+	displayHistoricalData(companySymbol){
+		// let historicalArray = []
+		console.log("companySymbol:",companySymbol);
+		axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB")
+		.then(({ data }) => {
+			console.log("isSelectHistorical:",this.state.isSelectHistorical);
+			console.log("data=======>",data['Time Series (Daily)']);
+			const originalObject = data['Time Series (Daily)'];
+			for (let key in originalObject) {
+				this.state.historicalArray.push({
+					date: key,
+					open: originalObject[key]['1. open'],
+					high: originalObject[key]['2. high'],
+					low: originalObject[key]['3. low'],
+					close: originalObject[key]['4. close'],
+					adjclose: originalObject[key]['5. adjusted close'], 
+					volume: originalObject[key]['6. volume']
 				})
-			}) 
-		}
+			}
+			console.log('grapharray: ', this.state.historicalArray);
+			console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
+			this.setState({isSelectHistorical: true})
+		})
+	}
 
-		displayHistoricalData(companySymbol){
-			// let historicalArray = []
-			console.log("companySymbol:",companySymbol);
-			axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB")
-			.then(({ data }) => {
-				console.log("isSelectHistorical:",this.state.isSelectHistorical);
-				console.log("data=======>",data['Time Series (Daily)']);
-				const originalObject = data['Time Series (Daily)'];
-				for (let key in originalObject) {
-					this.state.historicalArray.push({
-						date: key,
-						open: originalObject[key]['1. open'],
-						high: originalObject[key]['2. high'],
-						low: originalObject[key]['3. low'],
-						close: originalObject[key]['4. close'],
-						adjclose: originalObject[key]['5. adjusted close'], 
-						volume: originalObject[key]['6. volume']
-					})
-				}
-				console.log('grapharray: ', this.state.historicalArray);
-				console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
-				this.setState({isSelectHistorical: true})
+	addComapny(){
+		if (this.state.companySymbol) {
+			console.log("addCompany2:",this.state.companySymbol);
+			return(
+				swal({
+					title: this.state.companySymbol,
+					text: this.state.companyName,
+					icon: "success",
+					dangerMode: true,
+				}).then((willDelete) => {
+					if(willDelete){
+						this.updateCompany(this.state.companyName)
+					} else{
+						console.log("no data found");
+					}
+				})
+				)
+		}
+	}
+
+	updateCompany = (companyName) =>{
+		console.log('updatecompany:');
+		localStorage.getItem('email1')
+		let email = localStorage.email1;
+		console.log(companyName)
+		let companyData = [];
+		firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
+		.get()
+		.then(function(querySnapshot) {
+			console.log("querySnapshot",querySnapshot)
+			querySnapshot.forEach(function(doc) {
+				const { name, email } = doc.data();
+				console.log("data:",doc.data())
+				companyData.push({
+					key: doc.id,
+					doc,
+					name,
+					email,
+				});
+			});
+			console.log("data1:",companyData.length);
+			if (companyData.length) {
+				console.log('found data', companyData);
+				swal("Already added!","", "info")
+				.then((willDelete) => {
+					if(willDelete){
+						window.location.reload();
+					}
+				})
+			} else{
+				console.log("new company");
+				addCompany1()
+			}
+		});
+
+		let addCompany1 = () =>{
+			localStorage.getItem('email1')
+			let email = localStorage.email1;
+			console.log("isLoaded before:",this.state.isLoaded);
+			this.ref.add({
+				symbol:this.state.companySymbol,
+				name:this.state.companyName,
+				email: email
+			}).then((docRef) => {
+				window.location.reload();
+			})
+			.catch((error) => {
+				console.error("Error adding document: ", error);
 			})
 		}
 
-		addComapny(){
-			if (this.state.companySymbol) {
-				console.log("addCompany2:",this.state.companySymbol);
-				return(
-					swal({
-						title: this.state.companySymbol,
-						text: this.state.companyName,
-						icon: "success",
-						dangerMode: true,
-					}).then((willDelete) => {
-						if(willDelete){
-							this.updateCompany(this.state.companyName)
-						} else{
-							console.log("no data found");
-						}
-					})
-					)
-			}
-		}
+	}
 
-		updateCompany = (companyName) =>{
-			console.log('updatecompany:');
-			localStorage.getItem('email1')
-			let email = localStorage.email1;
-			console.log(companyName)
-			let companyData = [];
-			firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
-			.get()
-			.then(function(querySnapshot) {
-				console.log("querySnapshot",querySnapshot)
-				querySnapshot.forEach(function(doc) {
-					const { name, email } = doc.data();
-					console.log("data:",doc.data())
-					companyData.push({
-						key: doc.id,
-						doc,
-						name,
-						email,
-					});
-				});
-				console.log("data1:",companyData.length);
-				if (companyData.length) {
-					console.log('found data', companyData);
-					swal("Already added!","", "info")
-					.then((willDelete) => {
-						if(willDelete){
-							window.location.reload();
-						}
-					})
-				} else{
-					console.log("new company");
-					addCompany1()
-				}
-			});
-
-			let addCompany1 = () =>{
-				localStorage.getItem('email1')
-				let email = localStorage.email1;
-				console.log("isLoaded before:",this.state.isLoaded);
-				this.ref.add({
-					symbol:this.state.companySymbol,
-					name:this.state.companyName,
-					email: email
-				}).then((docRef) => {
-					window.location.reload();
+	selectComparisonCompany = prop => event =>{
+		let comparisonOfVolume = []
+		console.log("companySymbol=============>",prop);
+		console.log("event=================>",event.target.value);
+		console.log("beforeComparison=======>",this.state.beforeComparison);
+		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+event.target.value+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+		fetch(url)
+		.then(res => res.json())
+		.then(res => {const originalObject = res['Time Series (5min)'];
+			console.log("res==========>",originalObject);
+			for (let key in originalObject) {
+				this.state.comparisonArray1.push({
+					date: key,
+					open: originalObject[key]['1. open'],
+					high: originalObject[key]['2. high'],
+					low: originalObject[key]['3. low'],
+					close: originalObject[key]['4. close'],
+					volume: originalObject[key]['5. volume']
 				})
-				.catch((error) => {
-					console.error("Error adding document: ", error);
+			}	
+			console.log("comparisonArray1=======>",this.state.comparisonArray1);
+			console.log("volume======>",this.state.comparisonArray1[0].volume);
+		});
+		const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+this.state.beforeComparison+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+		fetch(url1)
+		.then(res1 => res1.json())
+		.then(res1 => {const originalObjectforDisply = res1['Time Series (5min)'];
+			console.log("originalObject===========>",originalObjectforDisply);
+			for (let key in originalObjectforDisply) {
+				this.state.comparisonArray2.push({
+					date: key,
+					open: originalObjectforDisply[key]['1. open'],
+					high: originalObjectforDisply[key]['2. high'],
+					low: originalObjectforDisply[key]['3. low'],
+					close: originalObjectforDisply[key]['4. close'],
+					volume: originalObjectforDisply[key]['5. volume']
 				})
-			}
-
+			}	
+			console.log("comparisonArray2=======>",this.state.comparisonArray2);
+			console.log("volume=== second volume===>",this.state.comparisonArray2[0].volume);
+		});
+		for(let i=0; i<this.state.comparisonArray1.length; i++){
+			comparisonOfVolume.push(this.state.comparisonArray2[i].volume -this.state.comparisonArray1[i].volume) ;
 		}
+		console.log("comparisonOfVolume==============>",comparisonOfVolume);
+	}
 
-		selectComparisonCompany = prop => event =>{
-			let comparisonOfVolume = []
-			console.log("companySymbol=============>",prop);
-			console.log("event=================>",event.target.value);
-			console.log("beforeComparison=======>",this.state.beforeComparison);
-			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+event.target.value+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+	comparison(companySymbol){
+		console.log("companySymbol===>",companySymbol);
+		this.setState({beforeComparison: companySymbol})
+	}
+
+	getSelectedIndicatorData =  prop => event => {
+		console.log("event:",event.target.value);
+		console.log("prop:",prop);
+			const url = "https://www.alphavantage.co/query?function="+event.target.value+"&symbol="+prop+"&interval=monthly&time_period=10&series_type=open&apikey= Z51NHQ9W28LJMOHB";
 			fetch(url)
 			.then(res => res.json())
-			.then(res => {const originalObject = res['Time Series (5min)'];
-				console.log("res==========>",originalObject);
+			.then(res => {
+				console.log("response 1st",res);
+				this.state.indicatorDataArray = [];
+				const originalObject = res['Technical Analysis: ' + [event.target.value]];
+				console.log("result:",['Technical Analysis: ' + [event.target.value]]);
+				console.log("originalObject:",originalObject);
 				for (let key in originalObject) {
-					this.state.comparisonArray1.push({
+					// console.log('hey key: ', key);
+					this.state.indicatorDataArray.push({
 						date: key,
-						open: originalObject[key]['1. open'],
-						high: originalObject[key]['2. high'],
-						low: originalObject[key]['3. low'],
-						close: originalObject[key]['4. close'],
-						volume: originalObject[key]['5. volume']
+						indicatorObj: originalObject[key][event.target.value],
 					})
-				}	
-				console.log("comparisonArray1=======>",this.state.comparisonArray1);
-				console.log("volume======>",this.state.comparisonArray1[0].volume);
-			});
-			const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+this.state.beforeComparison+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
-			fetch(url1)
-			.then(res1 => res1.json())
-			.then(res1 => {const originalObjectforDisply = res1['Time Series (5min)'];
-				console.log("originalObject===========>",originalObjectforDisply);
-				for (let key in originalObjectforDisply) {
-					this.state.comparisonArray2.push({
-						date: key,
-						open: originalObjectforDisply[key]['1. open'],
-						high: originalObjectforDisply[key]['2. high'],
-						low: originalObjectforDisply[key]['3. low'],
-						close: originalObjectforDisply[key]['4. close'],
-						volume: originalObjectforDisply[key]['5. volume']
-					})
-				}	
-				console.log("comparisonArray2=======>",this.state.comparisonArray2);
-				console.log("volume=== second volume===>",this.state.comparisonArray2[0].volume);
-			});
-			for(let i=0; i<this.state.comparisonArray1.length; i++){
-				 comparisonOfVolume.push(this.state.comparisonArray1[i].volume -this.state.comparisonArray2[i].volume) ;
-			}
-			console.log("comparisonOfVolume==============>",comparisonOfVolume);
-		}
-		comparison(companySymbol){
-			console.log("companySymbol===>",companySymbol);
-			this.setState({beforeComparison: companySymbol})
-		}
-
-		displayCompanyList(){
-			const {date} = this.state;
-			const ranges = [
-			{
-				value: '1min',
-				label: '1 min',
-			},
-			{
-				value: '5min',
-				label: '5 mins',
-			},
-			{
-				value: '15min',
-				label: '15 mins',
-			},
-			{
-				value: '30min',
-				label: '30 mins',
-			},
-			{
-				value: '60min',
-				label: '1 hour',
-			},
-			{
-				value: 'WEEKLY',
-				label: '1 week',
-			},
-			{
-				value: 'MONTHLY',
-				label: '1 month',
-			},
-			];
-
-			if (this.state.grapharray.length) {
-				console.log('hey i m called');
-				let graphSeries = this.state.grapharray;
-				console.log("length:",graphSeries.length);
-				let ts2 = 1484418600000;
-				let graphData = [];
-				for (let i = 0; i < graphSeries.length; i++) {
-					ts2 = ts2 + 86400000;
-					let obj = JSON.parse(graphSeries[i].volume)
-					let innerArr = [ts2,obj];
-					graphData.push(innerArr);
 				}
-				console.log("graphData:",graphData);
-				let  options ={
-					chart: {
-						stacked: false,
-						zoom: {
-							type: 'x',
-							enabled: true
+					console.log("indicatorDataArray:",this.state.indicatorDataArray);
+			})
+	}
+
+	displayCompanyList(){
+		const {date} = this.state;
+		const ranges = [
+		{
+			value: '1min',
+			label: '1 min',
+		},
+		{
+			value: '5min',
+			label: '5 mins',
+		},
+		{
+			value: '15min',
+			label: '15 mins',
+		},
+		{
+			value: '30min',
+			label: '30 mins',
+		},
+		{
+			value: '60min',
+			label: '1 hour',
+		},
+		{
+			value: 'WEEKLY',
+			label: '1 week',
+		},
+		{
+			value: 'MONTHLY',
+			label: '1 month',
+		},
+		];
+
+		const indicatorList = [
+		{
+			value: 'SMA',
+			label: 'simple moving average (SMA)',
+		},
+		{
+			value: 'EMA',
+			label: ' Exponential moving average (EMA) '
+		},
+		{
+			value: 'MACD',
+			label: 'Moving average convergence / divergence (MACD)',
+		},
+		{
+			value: 'MACDEXT',
+			label: 'Moving average convergence / divergence'
+		},
+		{
+			value: 'APO',
+			label: 'Absolute price oscillator (APO)',
+		},
+		{
+			value: 'RSI',
+			label: 'Relative strength index (RSI)',
+		},
+		{
+			value: 'ROC',
+			label: ' Rate of change(ROC)'
+		},
+		{
+			value: 'ROCR',
+			label: 'Rate of change ratio (ROCR)'
+		},
+		{
+			value: 'ADX',
+			label: 'Average directional movement index (ADX) ',
+		},
+		{
+			value: 'ROCR',
+			label: 'Rate of change ratio (ROCR)',
+		},
+		{
+			value: 'AROONOSC',
+			label: ' Aroon oscillator (AROONOSC)'
+		},
+		{
+			value: 'TRIX',
+			label: 'Triple smooth exponential moving average (TRIX)',
+		},
+		{
+			value: 'OBV',
+			label: 'On balance volume (OBV) ',
+		}
+		];
+
+		const handleOpen = () => {
+			this.setState({setOpen: false});
+		};
+
+		const handleClose = () => {
+			this.setState({setOpen: false});
+		};
+		const modalOpen = () =>{
+			this.setState({modalOpen:false});
+		}
+
+		if (this.state.grapharray.length) {
+			console.log('hey i m called');
+			let graphSeries = this.state.grapharray;
+			console.log("length:",graphSeries.length);
+			let ts2 = 1484418600000;
+			let graphData = [];
+			for (let i = 0; i < graphSeries.length; i++) {
+				ts2 = ts2 + 86400000;
+				let obj = JSON.parse(graphSeries[i].volume)
+				let innerArr = [ts2,obj];
+				graphData.push(innerArr);
+			}
+			console.log("graphData:",graphData);
+			let  options ={
+				chart: {
+					stacked: false,
+					zoom: {
+						type: 'x',
+						enabled: true
+					},
+					toolbar: {
+						autoSelected: 'zoom'
+					}
+				},
+				plotOptions: {
+					line: {
+						curve: 'smooth',
+					}
+				},
+				dataLabels: {
+					enabled: false
+				},
+				markers: {
+					size: 0,
+					style: 'full',
+				},
+				colors: ['#ff4d4d'],
+				opacity: 0.4,
+				title: {
+					text: 'Stock Price Movement',
+					align: 'left'
+				},
+				fill: {
+					type: 'gradient',
+					gradient: {
+						shadeIntensity: 1,
+						inverseColors: false,
+						opacityFrom: 0.5,
+						opacityTo: 0,
+						stops: [0, 90, 100]
+					},
+				},
+				yaxis: {
+					min: 0,
+					max: 250000,
+					labels: {
+						formatter: function (val) {
+							return (val).toFixed(0);
 						},
-						toolbar: {
-							autoSelected: 'zoom'
-						}
 					},
-					plotOptions: {
-						line: {
-							curve: 'smooth',
-						}
-					},
-					dataLabels: {
-						enabled: false
-					},
-					markers: {
-						size: 0,
-						style: 'full',
-					},
-					colors: ['#ff4d4d'],
-					opacity: 0.4,
 					title: {
-						text: 'Stock Price Movement',
-						align: 'left'
+						text: 'Price'
 					},
-					fill: {
-						type: 'gradient',
-						gradient: {
-							shadeIntensity: 1,
-							inverseColors: false,
-							opacityFrom: 0.5,
-							opacityTo: 0,
-							stops: [0, 90, 100]
-						},
-					},
-					yaxis: {
-						min: 0,
-						max: 250000,
-						labels: {
-							formatter: function (val) {
-								return (val).toFixed(0);
-							},
-						},
-						title: {
-							text: 'Price'
-						},
-					},
-					xaxis: {
-						type: 'datetime',
-					},
-					tooltip: {
-						shared: false,
-						y: {
-							formatter: function (val) {
-								return (val/1000).toFixed(0)
-							}
+				},
+				xaxis: {
+					type: 'datetime',
+				},
+				tooltip: {
+					shared: false,
+					y: {
+						formatter: function (val) {
+							return (val/1000).toFixed(0)
 						}
 					}
 				}
-				let series = [{
-					name: 'Stock price',
-					data: graphData
-				},
-				]
-				var chartrender = 
-				<div id="chart">
-				<ReactApexChart options={options} series={series} type="area" height="450" />
-				<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
-				<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
-				<span style={{color:'gray'}}>High: </span> <span style = {{marginRight:10}}>{this.state.high}</span>
-				<span style={{color:'gray'}}>Low: </span> <span style = {{marginRight:10}}>{this.state.low}</span>
-				<span style={{color:'gray'}}>Volume: </span> <span style = {{marginRight:10}}>{this.state.volume}</span>
-				</div>
 			}
-			var showGraphOrSearchResult = this.state.searchResponse.length ? <div>
-			<center><h3>Search Response....</h3></center>
-			{this.state.searchResponse.map(data =>	
-				<List key={data['1. symbol']} className="list">
-				<ListItem>
-				<ListItemText className="search_list" primary={data['1. symbol']} secondary={data['2. name']} />
-				<ListItemSecondaryAction className="search_list1">
-				<IconButton color="primary" edge="end" aria-label="Delete" onClick={() =>this.handleClick1(data)} className="addIcon">
-				<AddIcon/>
-				</IconButton>
-				</ListItemSecondaryAction>
-				</ListItem>
-				</List>
-				)}
-			</div> : (this.state.searchResponse ? <div>
-				<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
-				{this.state.isGraphDisplay ? (<span>
-					<TextField
-					select
-					style={{float:'right'}}
-					value={this.state.values.intervalRange}
-					onChange={this.selectInterval(this.state.clickCompanySymbol)}
-					InputProps={{
-						startAdornment: <InputAdornment position="start">Interval</InputAdornment>,
-					}}
-					>
-					{ranges.map(option => (
-						<MenuItem key={option.value} value={option.value}>
-						{option.label}
-						</MenuItem>
-						))}
-					</TextField><span className="historical_data"  onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
-					<TextField
-					select
-					style={{float:'right'}}
-					value={this.state.values.intervalRange}
-					onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
-					onClick ={() => this.comparison(this.state.clickCompanySymbol)}
-					InputProps={{
-						startAdornment: <InputAdornment position="start">Comparison</InputAdornment>,
-					}}
-					>
-					{this.state.companyData.map(company => (
-						<MenuItem key={company.symbol} value={company.symbol}>
-						{company.symbol}
-						</MenuItem>
-						))}
-					</TextField>
-					<TextField
-					select
-					style={{float:'right'}}
-					value={this.state.values.intervalRange}
-					onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
-					onClick ={() => this.comparison(this.state.clickCompanySymbol)}
-					InputProps={{
-						startAdornment: <InputAdornment position="start">Indicator</InputAdornment>,
-					}}
-					>
-					{this.state.companyData.map(company => (
-						<MenuItem key={company.symbol} value={company.symbol}>
-						{company.symbol}
-						</MenuItem>
-						))}
-					</TextField>
-					</span>) : ('')}
-				{this.state.isSelectHistorical ? (<div>
-					<Paper >
-					<Table  size="small">
-					<TableHead>
+			let series = [{
+				name: 'Stock price',
+				data: graphData
+			},
+			]
+			var chartrender = 
+			<div id="chart">
+
+			<ReactApexChart options={options} series={series} type="area" height="450" />
+
+			<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
+			<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
+			<span style={{color:'gray'}}>High: </span> <span style = {{marginRight:10}}>{this.state.high}</span>
+			<span style={{color:'gray'}}>Low: </span> <span style = {{marginRight:10}}>{this.state.low}</span>
+			<span style={{color:'gray'}}>Volume: </span> <span style = {{marginRight:10}}>{this.state.volume}</span>
+			</div>
+		}
+		var showGraphOrSearchResult = this.state.searchResponse.length ? <div>
+		<center><h3>Search Response....</h3></center>
+		{this.state.searchResponse.map(data =>	
+			<List key={data['1. symbol']} className="list">
+			<ListItem>
+			<ListItemText className="search_list" primary={data['1. symbol']} secondary={data['2. name']} />
+			<ListItemSecondaryAction className="search_list1">
+			<IconButton color="primary" edge="end" aria-label="Delete" onClick={() =>this.handleClick1(data)} className="addIcon">
+			<AddIcon/>
+			</IconButton>
+			</ListItemSecondaryAction>
+			</ListItem>
+			</List>
+			)}
+		</div> : (this.state.searchResponse ? <div>
+			<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
+			{this.state.isGraphDisplay ? (<span>
+				<TextField
+				select
+				style={{float:'right'}}
+				value={this.state.values.intervalRange}
+				onChange={this.selectInterval(this.state.clickCompanySymbol)}
+				InputProps={{
+					startAdornment: <InputAdornment position="start">Interval</InputAdornment>,
+				}}
+				>
+				{ranges.map(option => (
+					<MenuItem key={option.value} value={option.value}>
+					{option.label}
+					</MenuItem>
+					))}
+				</TextField><span className="historical_data"  onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
+				<TextField
+				select
+				style={{float:'right'}}
+				value={this.state.values.intervalRange}
+				onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
+				onClick ={() => this.comparison(this.state.clickCompanySymbol)}
+				InputProps={{
+					startAdornment: <InputAdornment position="start">Comparison</InputAdornment>,
+				}}
+				>
+				{this.state.companyData.map(company => (
+					<MenuItem key={company.symbol} value={company.symbol}>
+					{company.symbol}
+					</MenuItem>
+					))}
+				</TextField>
+				<TextField
+				select 
+				style={{float:'right'}}
+				value={this.state.values.intervalRange}
+				onChange={this.getSelectedIndicatorData(this.state.clickCompanySymbol)}
+				InputProps={{
+					startAdornment: <InputAdornment position="start">Indicator</InputAdornment>,
+				}}
+				>
+				{indicatorList.map(indicator => (
+					<MenuItem key={indicator.value} value={indicator.value} >
+					{indicator.label} 
+					</MenuItem>
+					))}
+				</TextField>
+
+				</span>) : ('')}
+			{this.state.isSelectHistorical ? (<div>
+				<Paper >
+				<Table  size="small">
+				<TableHead>
+				<TableRow>
+				<TableCell>Date</TableCell>
+				<TableCell align="right">Open</TableCell>
+				<TableCell align="right">High</TableCell>
+				<TableCell align="right">Low</TableCell>
+				<TableCell align="right">Close</TableCell>
+				<TableCell align="right">Adj Close</TableCell>
+				<TableCell align="right">Volume</TableCell>
+				</TableRow>
+				</TableHead>
+				<TableBody>
+				{this.state.historicalArray.map(historicalData => (
 					<TableRow>
-					<TableCell>Date</TableCell>
-					<TableCell align="right">Open</TableCell>
-					<TableCell align="right">High</TableCell>
-					<TableCell align="right">Low</TableCell>
-					<TableCell align="right">Close</TableCell>
-					<TableCell align="right">Adj Close</TableCell>
-					<TableCell align="right">Volume</TableCell>
+					<TableCell component="th" scope="row">{historicalData.date}</TableCell>
+					<TableCell align="right">{historicalData.open}</TableCell>
+					<TableCell align="right">{historicalData.high}</TableCell>
+					<TableCell align="right">{historicalData.low}</TableCell>
+					<TableCell align="right">{historicalData.close}</TableCell>
+					<TableCell align="right">{historicalData.adjclose}</TableCell>
+					<TableCell align="right">{historicalData.volume}</TableCell>
 					</TableRow>
-					</TableHead>
-					<TableBody>
-					{this.state.historicalArray.map(historicalData => (
-						<TableRow>
-						<TableCell component="th" scope="row">{historicalData.date}</TableCell>
-						<TableCell align="right">{historicalData.open}</TableCell>
-						<TableCell align="right">{historicalData.high}</TableCell>
-						<TableCell align="right">{historicalData.low}</TableCell>
-						<TableCell align="right">{historicalData.close}</TableCell>
-						<TableCell align="right">{historicalData.adjclose}</TableCell>
-						<TableCell align="right">{historicalData.volume}</TableCell>
-						</TableRow>
-						))}
-					</TableBody>
-					</Table>
-					</Paper>
-					</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : chartrender}</div>  : ''}</div>)}
-				
-				</div> : 'No data found')
-			var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
-				<List key={company.key} className="cursorClass">
-				<ListItem onClick={() =>this.handleClick(company)}>
-				<ListItemText primary={company.symbol} secondary={company.name}/>
-				<ListItemSecondaryAction>
-				<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
-				<RemoveCircle/>
-				</IconButton>
-				</ListItemSecondaryAction>
-				</ListItem>
-				</List>
-				)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
-			var displayData =  this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
-			if(this.state.isOpenSearch && !this.state.isSearchClick){
-				console.log("===========if=======");
+					))}
+				</TableBody>
+				</Table>
+				</Paper>
+				</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : chartrender}</div>  : ''}</div>)}
+
+			</div> : 'No data found')
+		var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
+			<List key={company.key} className="cursorClass">
+			<ListItem onClick={() =>this.handleClick(company)}>
+			<ListItemText primary={company.symbol} secondary={company.name}/>
+			<ListItemSecondaryAction>
+			<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
+			<RemoveCircle/>
+			</IconButton>
+			</ListItemSecondaryAction>
+			</ListItem>
+			</List>
+			)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
+		var displayData =  this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
+		if(this.state.isOpenSearch && !this.state.isSearchClick){
+			console.log("===========if=======");
+			return(
+				<div>
+				<div className="grid_class">
+				<span style={{fontSize :25,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
+				<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
+				<div className="logout">
+				<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
+				<b>Logout</b>
+				</Button></Link>
+				</div>
+				</div>
+
+				{this.addComapny()}
+				<div className="grid_class1">
+				<div className="company_list">
+
+				<Grid container spacing={1}>
+				<Grid item sm={10}>
+				<p style={{marginLeft: 18}}>Manage WatchList</p>
+				</Grid>
+				<Grid item sm={2}>
+				<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5',cursor:'pointer'}}>Done</p>
+				</Grid>
+				</Grid>
+				{this.state.companyData.map(company =>
+					<List key={company.key} className="vl" >
+					<ListItem >
+					<ListItemText primary={company.symbol} secondary={company.name}/>
+					<ListItemSecondaryAction>
+					<IconButton edge="end"  aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
+					<RemoveCircle/>
+					</IconButton>
+					</ListItemSecondaryAction>
+					</ListItem>
+					</List>
+					)}
+				</div>
+				<div className="search_bar">
+				<Typography variant="h6" noWrap>
+				<TextField
+				id="outlined-with-placeholder"
+				label="Search"
+				className="search_input"
+				value={this.state.value}
+				onChange={this.handleChange} 
+				margin="normal"
+				variant="outlined"
+				/>
+				<Button id="search"  onClick={this.handleSubmit} style={{color:'#fff'}} disabled={!this.state.value} autoFocus>
+				Search
+				</Button>
+				</Typography>
+				</div>					
+				</div>
+				</div>
+				)
+		} else if(this.state.isSearchClick ){
+			if(!this.state.searchResponse.length){
+				console.log("========else if ========if======");
 				return(
 					<div>
 					<div className="grid_class">
@@ -722,27 +864,75 @@ class Companylist extends Component {
 					<div className="grid_class1">
 					<div className="company_list">
 
-					<Grid container spacing={1}>
+					<Grid container spacing={12}>
 					<Grid item sm={10}>
-					<p style={{marginLeft: 18}}>Manage WatchList</p>
+					<p style={{marginLeft: 18}}>Manage Watchlist</p>
 					</Grid>
 					<Grid item sm={2}>
-					<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5',cursor:'pointer'}}>Done</p>
+					<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5'}}>Done</p>
 					</Grid>
 					</Grid>
 					{this.state.companyData.map(company =>
-						<List key={company.key} className="vl" >
-						<ListItem >
+						<List key={company.key} className="cursorClass vl">
+						<ListItem onClick={() =>this.handleClick(company)}>
 						<ListItemText primary={company.symbol} secondary={company.name}/>
 						<ListItemSecondaryAction>
-						<IconButton edge="end"  aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
+						<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
 						<RemoveCircle/>
 						</IconButton>
 						</ListItemSecondaryAction>
 						</ListItem>
 						</List>
 						)}
+					</div>	
+					<div className="searching_list">
+
+					<center><div className="searchCompany_list">
+					<p style={{marginRight:296}}>Showing Results for: <span style={{textTransform: 'capitalize'}}><b>{this.state.searchValue}</b></span></p>
+					No Data Found
+					</div>	</center>
+					</div>			
 					</div>
+					</div>
+					)
+			} else{
+				console.log("else if =========else");
+				return(
+					<div>
+					<div className="grid_class">
+					<span style={{fontSize :25,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
+					<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
+					<div className="logout">
+					<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
+					<b>Logout</b>
+					</Button></Link>
+					</div>
+					</div>
+					{this.addComapny()}
+					<div className="grid_class1">
+					<div className="company_list">
+
+					<Grid container spacing={1}>
+					<Grid item sm={10}>
+					<p style={{marginLeft: 18}}>Manage Watchlist</p>
+					</Grid>
+					<Grid item sm={2}>
+					<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5',cursor:'pointer'}}>Done</p>
+					</Grid>
+					</Grid>
+					{this.state.companyData.map(company =>
+						<List key={company.key} >
+						<ListItem className="vl">
+						<ListItemText primary={company.symbol} secondary={company.name}/>
+						<ListItemSecondaryAction>
+						<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
+						<RemoveCircle/>
+						</IconButton>
+						</ListItemSecondaryAction>
+						</ListItem>
+						</List>
+						)}
+					</div>	
 					<div className="search_bar">
 					<Typography variant="h6" noWrap>
 					<TextField
@@ -754,395 +944,288 @@ class Companylist extends Component {
 					margin="normal"
 					variant="outlined"
 					/>
-					<Button id="search"  onClick={this.handleSubmit} style={{color:'#fff'}} disabled={!this.state.value} autoFocus>
+					<Button className="search_button" id="search" disabled={!this.state.value} onClick={this.handleSubmit} style={{color:'#fff'}} autoFocus>
 					Search
 					</Button>
 					</Typography>
-					</div>					
+
+					<center><div className="searchCompany_list">
+					<p style={{marginRight:296}}>Showing Results for: <span style={{textTransform: 'capitalize'}}><b>{this.state.searchValue}</b></span></p>
+
+					{this.state.searchResponse.map(data =>	
+						<List key={data['1. symbol']} >
+						<ListItem>
+						<ListItemText  primary={data['1. symbol']} secondary={data['2. name']} />
+						<ListItemSecondaryAction >
+						<IconButton color="primary" edge="end" aria-label="Delete" onClick={() =>this.handleClick1(data)} >
+						<AddIcon/>
+						</IconButton>
+						</ListItemSecondaryAction>
+						</ListItem>
+						</List>
+						)}
+					</div>	</center>
+					</div>		
 					</div>
 					</div>
 					)
-			} else if(this.state.isSearchClick ){
-				if(!this.state.searchResponse.length){
-					console.log("========else if ========if======");
-					return(
-						<div>
-						<div className="grid_class">
-						<span style={{fontSize :25,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
-						<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
-						<div className="logout">
-						<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
-						<b>Logout</b>
-						</Button></Link>
-						</div>
-						</div>
-
-						{this.addComapny()}
-						<div className="grid_class1">
-						<div className="company_list">
-
-						<Grid container spacing={12}>
-						<Grid item sm={10}>
-						<p style={{marginLeft: 18}}>Manage Watchlist</p>
-						</Grid>
-						<Grid item sm={2}>
-						<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5'}}>Done</p>
-						</Grid>
-						</Grid>
-						{this.state.companyData.map(company =>
-							<List key={company.key} className="cursorClass vl">
-							<ListItem onClick={() =>this.handleClick(company)}>
-							<ListItemText primary={company.symbol} secondary={company.name}/>
-							<ListItemSecondaryAction>
-							<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
-							<RemoveCircle/>
-							</IconButton>
-							</ListItemSecondaryAction>
-							</ListItem>
-							</List>
-							)}
-						</div>	
-						<div className="searching_list">
-
-						<center><div className="searchCompany_list">
-						<p style={{marginRight:296}}>Showing Results for: <span style={{textTransform: 'capitalize'}}><b>{this.state.searchValue}</b></span></p>
-						No Data Found
-						</div>	</center>
-						</div>			
-						</div>
-						</div>
-						)
-				} else{
-					console.log("else if =========else");
-					return(
-						<div>
-						<div className="grid_class">
-						<span style={{fontSize :25,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
-						<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
-						<div className="logout">
-						<Link to ="/login"><Button variant="contained"  onClick={()=>this.logOut()}>
-						<b>Logout</b>
-						</Button></Link>
-						</div>
-						</div>
-						{this.addComapny()}
-						<div className="grid_class1">
-						<div className="company_list">
-
-						<Grid container spacing={1}>
-						<Grid item sm={10}>
-						<p style={{marginLeft: 18}}>Manage Watchlist</p>
-						</Grid>
-						<Grid item sm={2}>
-						<p onClick={()=>this.openCompanyList()} style={{color:'#3f51b5',cursor:'pointer'}}>Done</p>
-						</Grid>
-						</Grid>
-						{this.state.companyData.map(company =>
-							<List key={company.key} >
-							<ListItem className="vl">
-							<ListItemText primary={company.symbol} secondary={company.name}/>
-							<ListItemSecondaryAction>
-							<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
-							<RemoveCircle/>
-							</IconButton>
-							</ListItemSecondaryAction>
-							</ListItem>
-							</List>
-							)}
-						</div>	
-						<div className="search_bar">
-						<Typography variant="h6" noWrap>
-						<TextField
-						id="outlined-with-placeholder"
-						label="Search"
-						className="search_input"
-						value={this.state.value}
-						onChange={this.handleChange} 
-						margin="normal"
-						variant="outlined"
-						/>
-						<Button className="search_button" id="search" disabled={!this.state.value} onClick={this.handleSubmit} style={{color:'#fff'}} autoFocus>
-						Search
-						</Button>
-						</Typography>
-
-						<center><div className="searchCompany_list">
-						<p style={{marginRight:296}}>Showing Results for: <span style={{textTransform: 'capitalize'}}><b>{this.state.searchValue}</b></span></p>
-
-						{this.state.searchResponse.map(data =>	
-							<List key={data['1. symbol']} >
-							<ListItem>
-							<ListItemText  primary={data['1. symbol']} secondary={data['2. name']} />
-							<ListItemSecondaryAction >
-							<IconButton color="primary" edge="end" aria-label="Delete" onClick={() =>this.handleClick1(data)} >
-							<AddIcon/>
-							</IconButton>
-							</ListItemSecondaryAction>
-							</ListItem>
-							</List>
-							)}
-						</div>	</center>
-						</div>		
-						</div>
-						</div>
-						)
-				}
-
-			}else{
-				if(!this.state.isOpenCompanyList){
-					console.log("=====else ==========if");
-					return (
-						<div>
-						<div className="grid_class">
-						<span style={{fontSize :28,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
-						<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
-						<div className="logout">
-						<Link to ="/login"><Button variant="contained" onClick={()=>this.logOut()}>
-						<b>Logout</b>
-						</Button></Link>
-						</div>
-						</div>
-						<div className="grid_class1">
-						<div className="company_list">
-						<div className="plus_class">
-						<Grid container spacing={1}>
-						<Grid item sm={4}>
-						<IconButton color="primary" edge="end" aria-label="Delete" className="addIcon" onClick={()=>this.openSearchbar()}>
-						<AddIcon />
-						</IconButton>
-						</Grid>
-						<Grid item sm={8}>
-						<p><b>Manage WatchList</b></p>
-						</Grid>
-						</Grid>
-						</div>
-						{displayCompany}
-						</div>
-						<div className="graph_list">
-						{displayData}
-						</div>
-						</div>
-						</div>
-						)
-				}
-
 			}
-		}	
 
-		addSearchCompany(){
-			this.setState({isSearchClick: false})
+		}else{
+			if(!this.state.isOpenCompanyList){
+				console.log("=====else ==========if");
+				return (
+					<div>
+					<div className="grid_class">
+					<span style={{fontSize :28,marginLeft:8,color:'#fff'}}><b>Stock</b></span><br/>
+					<span style={{fontSize:17,color:'gray',marginLeft:8}}>{date}</span>
+					<div className="logout">
+					<Link to ="/login"><Button variant="contained" onClick={()=>this.logOut()}>
+					<b>Logout</b>
+					</Button></Link>
+					</div>
+					</div>
+					<div className="grid_class1">
+					<div className="company_list">
+					<div className="plus_class">
+					<Grid container spacing={1}>
+					<Grid item sm={4}>
+					<IconButton color="primary" edge="end" aria-label="Delete" className="addIcon" onClick={()=>this.openSearchbar()}>
+					<AddIcon />
+					</IconButton>
+					</Grid>
+					<Grid item sm={8}>
+					<p><b>Manage WatchList</b></p>
+					</Grid>
+					</Grid>
+					</div>
+					{displayCompany}
+					</div>
+					<div className="graph_list">
+					{displayData}
+					</div>
+					</div>
+					</div>
+					)
+			}
+
 		}
+	}	
 
-		getApiData() {
-			console.log("value:",this.state.value);
-			axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
-			.then((data)=>{
-				console.log("data of response:",data.data['bestMatches']);
-				this.setState({
-					searchResponse: data.data['bestMatches'],
-					isSearchClick: true,
-					isLoaded: true
-				});
-				if(!this.state.searchResponse.length){
-					console.log("searchrespone:",this.state.searchResponse.length);
-					console.log("===if callling===");
-					return(
-						<div>
-						"No Data Found"
-						</div>
-						)
-				}
-			}).catch(function(error) {
-				console.log("Error getting documents: ", error);
-			});
-		}
+	addSearchCompany(){
+		this.setState({isSearchClick: false})
+	}
 
-		componentDidMount() {
-			this.getCompany();
-			this.getDate();
-			this.unsubscribe = this.ref.onSnapshot(this.getCompany);
-		}
-
-		getDate = () => {
-			var date = new Date().toDateString();
-			this.setState({ date });
-		};
-
-		deleteCompany(id){
-			firebase.firestore().collection('company').doc(id).delete().then(() => {
-				console.log("cdata:",this.state.companyData);
-				swal("Successfully deleted!","", "success");
-				console.log("Document successfully deleted!");
-				if(this.state.companyData.length === 1 ){
-					window.location.reload();
-				}
-			}).catch((error) => {
-				console.log("Error removing document: ", error);
-			});
-		}	
-
-		handleClick(data) {
+	getApiData() {
+		console.log("value:",this.state.value);
+		axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
+		.then((data)=>{
+			console.log("data of response:",data.data['bestMatches']);
 			this.setState({
-				isLoaded: false
-			})
-			console.log('data: ', data);
-			let grapharray = [];
-			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+data.symbol+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
-			fetch(url)
-			.then(res => res.json())
-			.then(res => {console.log(res); return res;})
-			.then(res => {
-				if(!res){
-					swal("Click after a minute");
-				} else{
-					const originalObject = res['Time Series (5min)'];
-					for (let key in originalObject) {
-						grapharray.push({
-							date: key,
-							open: originalObject[key]['1. open'],
-							high: originalObject[key]['2. high'],
-							low: originalObject[key]['3. low'],
-							close: originalObject[key]['4. close'],
-							volume: originalObject[key]['5. volume']
-						})
-					}
-					console.log('grapharray: ', grapharray);
-					console.log("open:",grapharray['0'].open);
-					console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
-					this.setState({
-						grapharray: grapharray,
-						open: grapharray['0'].open,
-						close: grapharray['0'].close,
-						high: grapharray['0'].high,
-						low: grapharray['0'].low,
-						volume: grapharray['0'].volume,
-						clickCompanyName: data.name,
-						clickCompanySymbol: data.symbol,
-						isLoaded: true,
-						isGraphDisplay: true
-					})
-					console.log("isGraphDisplay after======>",this.state.isGraphDisplay);
-				}
-
-			}).catch((error )=> {console.log('hello error: ', error)
-			this.setState({isLoaded: true})
+				searchResponse: data.data['bestMatches'],
+				isSearchClick: true,
+				isLoaded: true
+			});
+			if(!this.state.searchResponse.length){
+				console.log("searchrespone:",this.state.searchResponse.length);
+				console.log("===if callling===");
+				return(
+					<div>
+					"No Data Found"
+					</div>
+					)
+			}
+		}).catch(function(error) {
+			console.log("Error getting documents: ", error);
 		});
+	}
+
+	componentDidMount() {
+		this.getCompany();
+		this.getDate();
+		this.unsubscribe = this.ref.onSnapshot(this.getCompany);
+	}
+
+	getDate = () => {
+		var date = new Date().toDateString();
+		this.setState({ date });
+	};
+
+	deleteCompany(id){
+		firebase.firestore().collection('company').doc(id).delete().then(() => {
+			console.log("cdata:",this.state.companyData);
+			swal("Successfully deleted!","", "success");
+			console.log("Document successfully deleted!");
+			if(this.state.companyData.length === 1 ){
+				window.location.reload();
+			}
+		}).catch((error) => {
+			console.log("Error removing document: ", error);
+		});
+	}	
+
+	handleClick(data) {
+		this.setState({
+			isLoaded: false
+		})
+		console.log('data: ', data);
+		let grapharray = [];
+		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+data.symbol+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+		fetch(url)
+		.then(res => res.json())
+		.then(res => {console.log(res); return res;})
+		.then(res => {
+			if(!res){
+				swal("Click after a minute");
+			} else{
+				const originalObject = res['Time Series (5min)'];
+				for (let key in originalObject) {
+					grapharray.push({
+						date: key,
+						open: originalObject[key]['1. open'],
+						high: originalObject[key]['2. high'],
+						low: originalObject[key]['3. low'],
+						close: originalObject[key]['4. close'],
+						volume: originalObject[key]['5. volume']
+					})
+				}
+				console.log('grapharray: ', grapharray);
+				console.log("open:",grapharray['0'].open);
+				console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
+				this.setState({
+					grapharray: grapharray,
+					open: grapharray['0'].open,
+					close: grapharray['0'].close,
+					high: grapharray['0'].high,
+					low: grapharray['0'].low,
+					volume: grapharray['0'].volume,
+					clickCompanyName: data.name,
+					clickCompanySymbol: data.symbol,
+					isLoaded: true,
+					isGraphDisplay: true
+				})
+				console.log("isGraphDisplay after======>",this.state.isGraphDisplay);
+			}
+
+		}).catch((error )=> {console.log('hello error: ', error)
+		this.setState({isLoaded: true})
+	});
+	}	
+
+	logOut(){
+		firebase
+		.auth()
+		.signOut().then(function() {
+			console.log('Signed Out');
+			localStorage.getItem('email1');
+			console.log(localStorage);
+			localStorage.clear();
+			localStorage.removeItem('email1');
+			console.log(localStorage);
+			window.location.hash="/"
+		}, function(error) {
+			console.error('Sign Out Error', error);
+		});
+	}
+
+	openSearchbar(){
+		this.setState({
+			isOpenSearch: true
+		});
+	}
+
+	openCompanyList(){
+		this.setState({isOpenCompanyList: false})
+		console.log("isOpenCompanyList:",this.state.isOpenCompanyList);
+		window.location.hash='/Copmpany-list';
+	}
+
+	getCompany(){
+		let companyData = [];
+		localStorage.getItem('email1')
+		let email = localStorage.email1;
+		console.log('email==========>',email);
+		firebase.firestore().collection("company").where("email", "==", email)
+		.get()
+		.then(function(querySnapshot) {
+			querySnapshot.forEach(function(doc) {
+				const { name, symbol } = doc.data();
+				companyData.push({
+					key: doc.id,
+					doc,
+					name,
+					symbol,
+				});
+			});
+			setLoader(true);
+			if (companyData.length) {
+				console.log('found data==========>', companyData);
+				setTheState(companyData);
+				console.log("call");
+				// displayGraph()
+			}else{
+				return(
+					<div>
+					<p>No data found</p>
+					</div>
+					)
+			}
+		}).catch(function(error) {
+			console.log("Error getting documents: ", error);
+		});
+
+		var setLoader = (isLoaded) =>{
+			this.setState({
+				isLoaded: isLoaded
+			})
+		}
+
+		var setTheState = (companyData) =>{
+			this.setState({
+				companyData: companyData,
+				isLoaded: true
+			})
+		}
+		// var displayGraph = () => {
+			// 			console.log("companyData before:",this.state.companyData);
+			// 			console.log("companyData:",this.state.companyData);
+			// 			let firstCompanySymbol = this.state.companyData[1];
+			// 			console.log("firstCompanySymbol",firstCompanySymbol);
+			// 			this.handleClick(firstCompanySymbol)
+			// 		}
 		}	
 
-		logOut(){
-			firebase
-			.auth()
-			.signOut().then(function() {
-				console.log('Signed Out');
-				localStorage.getItem('email1');
-				console.log(localStorage);
-				localStorage.clear();
-				localStorage.removeItem('email1');
-				console.log(localStorage);
-				window.location.hash="/"
-			}, function(error) {
-				console.error('Sign Out Error', error);
-			});
-		}
 
-		openSearchbar(){
-			this.setState({
-				isOpenSearch: true
-			});
-		}
 
-		openCompanyList(){
-			this.setState({isOpenCompanyList: false})
-			console.log("isOpenCompanyList:",this.state.isOpenCompanyList);
-			window.location.hash='/Copmpany-list';
-		}
 
-		getCompany(){
-			let companyData = [];
-			localStorage.getItem('email1')
-			let email = localStorage.email1;
-			console.log('email==========>',email);
-			firebase.firestore().collection("company").where("email", "==", email)
-			.get()
-			.then(function(querySnapshot) {
-				querySnapshot.forEach(function(doc) {
-					const { name, symbol } = doc.data();
-					companyData.push({
-						key: doc.id,
-						doc,
-						name,
-						symbol,
-					});
-				});
-				setLoader(true);
-				if (companyData.length) {
-					console.log('found data==========>', companyData);
-					setTheState(companyData);
-					console.log("call");
-					// displayGraph()
-				}else{
-					return(
-						<div>
-						<p>No data found</p>
-						</div>
-						)
-				}
-			}).catch(function(error) {
-				console.log("Error getting documents: ", error);
-			});
+		render() {
 
-			var setLoader = (isLoaded) =>{
-				this.setState({
-					isLoaded: isLoaded
-				})
+			const { isLoaded} = this.state;
+
+			if (!isLoaded) {
+				return (
+					<center>
+					<div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+					</center>
+					)
+			} else if(isLoaded){
+				return(
+					<div className="main">
+					{this.displayCompanyList()}
+					</div>
+					)
+
+			} else{
+				return(
+					<div>
+					<h2>Sorry no data found</h2>
+					</div>
+					);
 			}
-
-			var setTheState = (companyData) =>{
-				this.setState({
-					companyData: companyData,
-					isLoaded: true
-				})
-			}
-			// var displayGraph = () => {
-				// 			console.log("companyData before:",this.state.companyData);
-				// 			console.log("companyData:",this.state.companyData);
-				// 			let firstCompanySymbol = this.state.companyData[1];
-				// 			console.log("firstCompanySymbol",firstCompanySymbol);
-				// 			this.handleClick(firstCompanySymbol)
-				// 		}
-			}	
-
-
-
-
-			render() {
-
-				const { isLoaded} = this.state;
-
-				if (!isLoaded) {
-					return (
-						<center>
-						<div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-						</center>
-						)
-				} else if(isLoaded){
-					return(
-						<div className="main">
-						{this.displayCompanyList()}
-						</div>
-						)
-
-				} else{
-					return(
-						<div>
-						<h2>Sorry no data found</h2>
-						</div>
-						);
-				}
-			}
-
 		}
 
+	}
 
-		export default Companylist
+
+	export default Companylist
 
