@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import firebase from '../Firebase';
 import ReactApexChart from 'react-apexcharts';
+import ApexCharts from 'apexcharts';
 import swal from 'sweetalert';
 import '../App.css';
 import './Company-list.css';
@@ -26,6 +27,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Modal from '@material-ui/core/Modal';
+import Card from '@material-ui/core/Card';
 
 class Companylist extends Component {
 
@@ -62,6 +64,8 @@ class Companylist extends Component {
 			comparisonArray1: [],
 			comparisonArray2: [],
 			indicatorDataArray: [],
+			indicatorGraphData: [],
+			comparisonOfVolume: [],
 			historicalOpen: '',
 			historicalClose: '',
 			historicalHigh: '',
@@ -69,11 +73,12 @@ class Companylist extends Component {
 			historicalVolume: '',
 			historicalAdjClose: '',
 			values: '',
+			firstCompany: '',
+			selectedCompany: '',
 			selectedInterval: '',
 			intervalRange: '',
 			clickCompanyName: '',
 			clickCompanySymbol: '',
-			beforeComparison: '',
 			isToggleOn: true,
 			setOpen: false,
 			modalOpen: false,
@@ -84,7 +89,9 @@ class Companylist extends Component {
 			isSelectinterval: false,
 			isGraphDisplay: false,
 			isSelectHistorical: false,
-			isIntervalValue: false
+			isIntervalValue: false,
+			isIndicatorGraph: false,
+			isComparedCompany: false
 		};
 		this.handleClick1 = this.handleClick1.bind(this);
 		this.handleChange = this.handleChange.bind(this);
@@ -135,7 +142,8 @@ class Companylist extends Component {
 	}
 
 	selectInterval =  prop => event => {
-		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, selectedInterval:prop, graphData:[], intervalArray: []});
+		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, isSelectHistorical: false, isSelectinterval: false,isComparedCompany: false, selectedInterval:prop, graphData:[], intervalArray: []});
+		this.state.isSelectHistorical = false;
 		console.log("event:",event.target.value);
 		console.log("prop:",prop);
 		console.log("interval array=========>",this.state.intervalArray);
@@ -158,10 +166,7 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}
-				console.log("interval intervalArray",res);
-				console.log("intervalArray:",this.state.intervalArray);
 				this.displayGraphOfInterval();
-				
 			})
 		} else if(event.target.value === 'WEEKLY'){
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
@@ -203,7 +208,6 @@ class Companylist extends Component {
 	};
 
 	displayGraphOfInterval(){
-
 		console.log("inside function intervalArray=====>",this.state.intervalArray);
 		let graphSeries = this.state.intervalArray;
 		console.log("length of ========>:",graphSeries.length);
@@ -215,8 +219,7 @@ class Companylist extends Component {
 			let innerArr = [ts2,obj];
 			this.state.intervalData.push(innerArr);
 		} 
-		
-		console.log("intervalData ===========>:",this.state.intervalData.length);
+		console.log("intervalData ===========>:",this.state.intervalData);
 		console.log("intervalArray ===========>:",this.state.intervalArray.length);
 		let  options ={
 			chart: {
@@ -289,8 +292,6 @@ class Companylist extends Component {
 		}
 		]
 		console.log("before=========>",this.state.intervalData);
-		// this.setState({intervalData: []})
-		// console.log("after=========>",this.state.intervalData);
 		var chartrender = 
 		<div id="chart">
 		<ReactApexChart options={options} series={series} type="area" height="500"/>
@@ -299,8 +300,6 @@ class Companylist extends Component {
 			{chartrender}
 			</div>
 			)
-
-		// this.setState({intervalArray:'',isIntervalValue: false,isLoaded:false})
 	}  
 
 	getInfo = () => {
@@ -313,7 +312,7 @@ class Companylist extends Component {
 	}
 
 	displayHistoricalData(companySymbol){
-		// let historicalArray = []
+		this.setState({isSelectHistorical: false,isSelectinterval: false})
 		console.log("companySymbol:",companySymbol);
 		axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB")
 		.then(({ data }) => {
@@ -411,10 +410,13 @@ class Companylist extends Component {
 	}
 
 	selectComparisonCompany = prop => event =>{
-		let comparisonOfVolume = []
+		this.setState({isComparedCompany: true,firstCompany: prop,selectedCompany: event.target.value})
+		this.state.isComparedCompany = true;
+		// this.state.isSelectHistorical = false;
+		// this.state.isSelectinterval = false;
+		// let comparisonOfVolume = []
 		console.log("companySymbol=============>",prop);
 		console.log("event=================>",event.target.value);
-		console.log("beforeComparison=======>",this.state.beforeComparison);
 		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+event.target.value+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 		fetch(url)
 		.then(res => res.json())
@@ -430,10 +432,9 @@ class Companylist extends Component {
 					volume: originalObject[key]['5. volume']
 				})
 			}	
-			console.log("comparisonArray1=======>",this.state.comparisonArray1);
-			console.log("volume======>",this.state.comparisonArray1[0].volume);
+			console.log("comparison Array1=======>",this.state.comparisonArray1);
 		});
-		const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+this.state.beforeComparison+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+		const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 		fetch(url1)
 		.then(res1 => res1.json())
 		.then(res1 => {const originalObjectforDisply = res1['Time Series (5min)'];
@@ -448,44 +449,167 @@ class Companylist extends Component {
 					volume: originalObjectforDisply[key]['5. volume']
 				})
 			}	
-			console.log("comparisonArray2=======>",this.state.comparisonArray2);
-			console.log("volume=== second volume===>",this.state.comparisonArray2[0].volume);
+			console.log("comparison Array2=======>",this.state.comparisonArray2);
+			this.displayGraphOfComparison();
 		});
-		for(let i=0; i<this.state.comparisonArray1.length; i++){
-			comparisonOfVolume.push(this.state.comparisonArray2[i].volume -this.state.comparisonArray1[i].volume) ;
-		}
-		console.log("comparisonOfVolume==============>",comparisonOfVolume);
+		console.log("this.state.isComparedCompany:",this.state.isComparedCompany);
 	}
 
-	comparison(companySymbol){
-		console.log("companySymbol===>",companySymbol);
-		this.setState({beforeComparison: companySymbol})
+	displayGraphOfComparison(){
+		console.log("comparison of graph");
+		console.log("firstCompany:",this.state.firstCompany);
+		console.log("selectedCompany:",this.state.selectedCompany);
+		if(this.state.comparisonArray1.length && this.state.comparisonArray2){
+			for(let i=0; i<this.state.comparisonArray1.length; i++){
+				this.state.comparisonOfVolume.push({date:this.state.comparisonArray1[i].date,diffence :this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume,first : this.state.comparisonArray2[i].volume,second : this.state.comparisonArray1[i].volume}) ;
+			}
+			console.log("comparison Of Volume==============>",this.state.comparisonOfVolume);
+			return(
+				<div>
+				<Paper>
+				<Table>
+				<TableHead>
+				<TableRow>
+				<TableCell>Date</TableCell>
+				<TableCell>{this.state.firstCompany}</TableCell>
+				<TableCell>{this.state.selectedCompany}</TableCell>
+				<TableCell>Differnce</TableCell>
+				</TableRow>
+				</TableHead>
+				<TableBody>
+				{this.state.comparisonOfVolume.map(data => (
+					<TableRow key={data.diffence}>
+					<TableCell>{data.date}</TableCell>
+					<TableCell>{data.first}</TableCell>
+					<TableCell>{data.second}</TableCell>
+					<TableCell>{data.diffence}</TableCell>
+					</TableRow>
+					))}
+				</TableBody>
+				</Table>
+
+				</Paper>
+				</div>
+				)
+		}
 	}
 
 	getSelectedIndicatorData =  prop => event => {
 		console.log("event:",event.target.value);
 		console.log("prop:",prop);
-			const url = "https://www.alphavantage.co/query?function="+event.target.value+"&symbol="+prop+"&interval=monthly&time_period=10&series_type=open&apikey= Z51NHQ9W28LJMOHB";
-			fetch(url)
-			.then(res => res.json())
-			.then(res => {
-				console.log("response 1st",res);
-				this.state.indicatorDataArray = [];
-				const originalObject = res['Technical Analysis: ' + [event.target.value]];
-				console.log("result:",['Technical Analysis: ' + [event.target.value]]);
-				console.log("originalObject:",originalObject);
-				for (let key in originalObject) {
-					// console.log('hey key: ', key);
-					this.state.indicatorDataArray.push({
-						date: key,
-						indicatorObj: originalObject[key][event.target.value],
-					})
+		const url = "https://www.alphavantage.co/query?function="+event.target.value+"&symbol="+prop+"&interval=monthly&time_period=10&series_type=open&apikey= Z51NHQ9W28LJMOHB";
+		fetch(url)
+		.then(res => res.json())
+		.then(res => {
+			this.setState({indicatorGraphData: [], indicatorDataArray: [], isIndicatorGraph: true, isIntervalValue: false, isSelectHistorical: false, isComparedCompany: false})
+			const originalObject = res['Technical Analysis: ' + [event.target.value]];
+			console.log("result:",['Technical Analysis: ' + [event.target.value]]);
+			console.log("originalObject:",originalObject);
+			console.log("isIndicatorGraph:",this.state.isIndicatorGraph);
+			for (let key in originalObject) {
+				this.state.indicatorDataArray.push({
+					date: key,
+					indicatorObj: originalObject[key][event.target.value],
+				})
+			}
+			console.log("indicatorDataArray:",this.state.indicatorDataArray);
+			this.displayGraphOfIndicator()
+		})
+	}
+
+	displayGraphOfIndicator(){
+		console.log("indicator fun called");
+		let graphSeries = this.state.indicatorDataArray;
+		console.log("length:",graphSeries.length);
+		let ts2 = 1484418600000;
+		for (let i = 0; i < graphSeries.length; i++) {
+			ts2 = ts2 + 86400000;
+			let obj = JSON.parse(graphSeries[i].indicatorObj)
+			let innerArr = [ts2,obj];
+			this.state.indicatorGraphData.push(innerArr);
+		}
+		console.log("graphData:",this.state.indicatorGraphData);
+		let  options ={
+			chart: {
+				stacked: false,
+				zoom: {
+					type: 'x',
+					enabled: true
+				},
+				toolbar: {
+					autoSelected: 'zoom'
 				}
-					console.log("indicatorDataArray:",this.state.indicatorDataArray);
-			})
+			},
+			plotOptions: {
+				line: {
+					curve: 'smooth',
+				}
+			},
+			dataLabels: {
+				enabled: false
+			},
+			markers: {
+				size: 0,
+				style: 'full',
+			},
+			colors: ['#ff4d4d'],
+			opacity: 0.4,
+			title: {
+				text: 'Stock Price Movement',
+				align: 'left'
+			},
+			fill: {
+				type: 'gradient',
+				gradient: {
+					shadeIntensity: 1,
+					inverseColors: false,
+					opacityFrom: 0.5,
+					opacityTo: 0,
+					stops: [0, 90, 100]
+				},
+			},
+			yaxis: {
+				min: 0,
+				max: 2500,
+				labels: {
+					formatter: function (val) {
+						return (val).toFixed(0);
+					},
+				},
+				title: {
+					text: 'Price'
+				},
+			},
+			xaxis: {
+				type: 'datetime',
+			},
+			tooltip: {
+				shared: false,
+				y: {
+					formatter: function (val) {
+						return (val/1000).toFixed(0)
+					}
+				}
+			}
+		}
+		let series = [{
+			name: 'Stock price',
+			data: this.state.indicatorGraphData
+		},
+		]
+		var chartrender = 
+		<div id="chart">
+		<ReactApexChart options={options} series={series} type="area" height="500"/>
+		</div>
+		return(<div>
+			{chartrender}
+			</div>
+			)
 	}
 
 	displayCompanyList(){
+		console.log("isIndicatorGraph:",this.state.isIndicatorGraph);
+		console.log("isIntervalValue:",this.state.isIntervalValue);
 		const {date} = this.state;
 		const ranges = [
 		{
@@ -556,10 +680,6 @@ class Companylist extends Component {
 			label: 'Average directional movement index (ADX) ',
 		},
 		{
-			value: 'ROCR',
-			label: 'Rate of change ratio (ROCR)',
-		},
-		{
 			value: 'AROONOSC',
 			label: ' Aroon oscillator (AROONOSC)'
 		},
@@ -572,18 +692,6 @@ class Companylist extends Component {
 			label: 'On balance volume (OBV) ',
 		}
 		];
-
-		const handleOpen = () => {
-			this.setState({setOpen: false});
-		};
-
-		const handleClose = () => {
-			this.setState({setOpen: false});
-		};
-		const modalOpen = () =>{
-			this.setState({modalOpen:false});
-		}
-
 		if (this.state.grapharray.length) {
 			console.log('hey i m called');
 			let graphSeries = this.state.grapharray;
@@ -597,7 +705,7 @@ class Companylist extends Component {
 				graphData.push(innerArr);
 			}
 			console.log("graphData:",graphData);
-			let  options ={
+			let  options = {
 				chart: {
 					stacked: false,
 					zoom: {
@@ -667,9 +775,7 @@ class Companylist extends Component {
 			]
 			var chartrender = 
 			<div id="chart">
-
 			<ReactApexChart options={options} series={series} type="area" height="450" />
-
 			<span style={{color:'gray'}}>Open: </span> <span style = {{marginRight:10}}>{this.state.open}</span>
 			<span style={{color:'gray'}}>Close: </span> <span style = {{marginRight:10}}>{this.state.close}</span>
 			<span style={{color:'gray'}}>High: </span> <span style = {{marginRight:10}}>{this.state.high}</span>
@@ -714,7 +820,6 @@ class Companylist extends Component {
 				style={{float:'right'}}
 				value={this.state.values.intervalRange}
 				onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
-				onClick ={() => this.comparison(this.state.clickCompanySymbol)}
 				InputProps={{
 					startAdornment: <InputAdornment position="start">Comparison</InputAdornment>,
 				}}
@@ -771,12 +876,12 @@ class Companylist extends Component {
 				</TableBody>
 				</Table>
 				</Paper>
-				</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : chartrender}</div>  : ''}</div>)}
-
-			</div> : 'No data found')
+				</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : <div>{this.state.isIndicatorGraph ? <div>Indicatorgraph{this.displayGraphOfIndicator()}</div> : <div>{this.state.isComparedCompany ? <div>compared company{this.displayGraphOfComparison()}</div> : <div>no condition{chartrender}</div>}</div>}</div>}</div>  
+				: <div>no graph</div>}</div>)}</div> 
+				: 'No data found')
 		var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
 			<List key={company.key} className="cursorClass">
-			<ListItem onClick={() =>this.handleClick(company)}>
+			<ListItem onClick={() => this.handleClick(company)}>
 			<ListItemText primary={company.symbol} secondary={company.name}/>
 			<ListItemSecondaryAction>
 			<IconButton edge="end" aria-label="Delete" style={{color:'#ff4d4d'}} onClick={this.deleteCompany.bind(this, company.key)}>
@@ -1066,7 +1171,7 @@ class Companylist extends Component {
 
 	handleClick(data) {
 		this.setState({
-			isLoaded: false
+			isLoaded: false,isSelectinterval: false, isSelectHistorical: false, isSelectinterval: false,isComparedCompany: false
 		})
 		console.log('data: ', data);
 		let grapharray = [];
@@ -1194,9 +1299,6 @@ class Companylist extends Component {
 			// 			this.handleClick(firstCompanySymbol)
 			// 		}
 		}	
-
-
-
 
 		render() {
 

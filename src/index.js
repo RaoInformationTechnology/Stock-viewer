@@ -7,7 +7,7 @@ import * as serviceWorker from './serviceWorker';
 import Create from './components/Create';
 import Login from './components/Login';
 import Companylist from './components/Company-list';
-import Demo from './components/demo';
+// import Demo from './components/demo';
 
 
 ReactDOM.render(
