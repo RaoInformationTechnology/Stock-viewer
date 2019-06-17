@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import firebase from '../Firebase';
 import ReactApexChart from 'react-apexcharts';
-import ApexCharts from 'apexcharts';
+
 import swal from 'sweetalert';
 import '../App.css';
 import './Company-list.css';
@@ -26,8 +26,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import Modal from '@material-ui/core/Modal';
-import Card from '@material-ui/core/Card';
+
 
 class Companylist extends Component {
 
@@ -103,6 +102,12 @@ class Companylist extends Component {
 
 	}
 
+	componentDidMount() {
+		this.getCompany();
+		this.getDate();
+		this.unsubscribe = this.ref.onSnapshot(this.getCompany);
+	}
+
 	handleChange(event) {
 		this.setState({value: event.target.value,searchValue: event.target.value});
 	}
@@ -141,23 +146,131 @@ class Companylist extends Component {
 		this.addComapny();
 	}
 
+	getInfo = () => {
+		axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
+		.then(({ data }) => {
+			this.setState({
+				results: data.data
+			})
+		}) 
+	}
+
+	displayHistoricalData(companySymbol){
+		console.log("symbol of selected company==============>",companySymbol);
+		this.setState({isSelectHistorical: true,isSelectinterval: false, historicalArray: [],isComparedCompany:false})
+		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB";
+		fetch(url)
+		.then(res => res.json())
+		.then(res => {
+			const originalObject = res['Time Series (Daily)'];
+			console.log('originalObject: ', originalObject);
+			for (let key in originalObject) {
+				this.state.historicalArray.push({
+					date: key,
+					open: originalObject[key]['1. open'],
+					high: originalObject[key]['2. high'],
+					low: originalObject[key]['3. low'],
+					close: originalObject[key]['4. close'],
+					adjclose: originalObject[key]['5. adjusted close'], 
+					volume: originalObject[key]['6. volume']
+				})
+			}
+			console.log("historicalArray==========>",this.state.historicalArray);
+			this.setState({isSelectHistorical: true})
+		}).catch((err)=>{console.log("error============>",err);})
+	}
+
+	addComapny(){
+		if (this.state.companySymbol) {
+			console.log("addCompany2:",this.state.companySymbol);
+			return(
+				swal({
+					title: this.state.companySymbol,
+					text: this.state.companyName,
+					icon: "success",
+					dangerMode: true,
+				}).then((willDelete) => {
+					if(willDelete){
+						this.updateCompany(this.state.companyName)
+					} else{
+						console.log("no data found");
+					}
+				})
+				)
+		}
+	}
+
+	updateCompany = (companyName) =>{
+		console.log('updatecompany:');
+		localStorage.getItem('email1')
+		let email = localStorage.email1;
+		console.log(companyName)
+		let companyData = [];
+		firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
+		.get()
+		.then(function(querySnapshot) {
+			console.log("querySnapshot",querySnapshot)
+			querySnapshot.forEach(function(doc) {
+				const { name, email } = doc.data();
+				console.log("data:",doc.data())
+				companyData.push({
+					key: doc.id,
+					doc,
+					name,
+					email,
+				});
+			});
+			console.log("data1:",companyData.length);
+			if (companyData.length) {
+				console.log('found data', companyData);
+				swal("Already added!","", "info")
+				.then((willDelete) => {
+					if(willDelete){
+						window.location.reload();
+					}
+				})
+			} else{
+				console.log("new company");
+				addCompany1()
+			}
+		});
+
+		let addCompany1 = () =>{
+			localStorage.getItem('email1')
+			let email = localStorage.email1;
+			console.log("isLoaded before:",this.state.isLoaded);
+			this.ref.add({
+				symbol:this.state.companySymbol,
+				name:this.state.companyName,
+				email: email
+			}).then((docRef) => {
+				window.location.reload();
+			})
+			.catch((error) => {
+				console.error("Error adding document: ", error);
+			})
+		}
+	}
+
 	selectInterval =  prop => event => {
-		this.setState({ ...this.state.values, prop: event.target.value, isSelectinterval: true, isSelectHistorical: false, isSelectinterval: false,isComparedCompany: false, selectedInterval:prop, graphData:[], intervalArray: []});
 		this.state.isSelectHistorical = false;
+		var intervalApiData = [];
 		console.log("event:",event.target.value);
 		console.log("prop:",prop);
 		console.log("interval array=========>",this.state.intervalArray);
 		if(event.target.value === 'MONTHLY'){
+			this.state.intervalArray = [];
+			this.state.isComparedCompany = false;
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 			fetch(url)
 			.then(res => res.json())
 			.then(res => {
+				this.setState({ isIntervalValue:true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval:prop, graphData:[]});
 				const originalObject = res['Monthly Time Series'];
 				console.log('originalObject: ', originalObject);
 				console.log("interval array======second time===>",this.state.intervalArray);
 				for (let key in originalObject) {
-					console.log('hey key: ', key);
-					this.state.intervalArray.push({
+					intervalApiData.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -166,15 +279,20 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}
+				this.setState({intervalArray:intervalApiData})
 				this.displayGraphOfInterval();
-			})
-		} else if(event.target.value === 'WEEKLY'){
+			}).catch(err => console.log("error:",err))
+		} 
+		else if(event.target.value === 'WEEKLY'){
+			this.state.intervalArray = [];
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 			fetch(url)
 			.then(res => res.json())
-			.then(res => {const originalObject = res['Weekly Time Series'];
+			.then(res => {
+				this.setState({isIntervalValue:true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval:prop, graphData:[]});
+				const originalObject = res['Weekly Time Series'];
 				for (let key in originalObject) {
-					this.state.intervalArray.push({
+					intervalApiData.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -183,15 +301,19 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}console.log("interval intervalArray",this.state.intervalArray);
+				this.setState({intervalArray:intervalApiData})
 				this.displayGraphOfInterval();
-			})	
+			}).catch(err => console.log("error:",err))
 		} else{
+			this.state.intervalArray = [];
 			const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval="+event.target.value+"&apikey= Z51NHQ9W28LJMOHB";
 			fetch(url)
 			.then(res => res.json())
-			.then(res => {const originalObject = res['Time Series ('+event.target.value+')'];
+			.then(res => {
+				this.setState({isIntervalValue:true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval:prop, graphData:[]});
+				const originalObject = res['Time Series ('+event.target.value+')'];
 				for (let key in originalObject) {
-					this.state.intervalArray.push({
+					intervalApiData.push({
 						date: key,
 						open: originalObject[key]['1. open'],
 						high: originalObject[key]['2. high'],
@@ -200,9 +322,10 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}	console.log("interval intervalArray",this.state.intervalArray);
+				this.setState({intervalArray:intervalApiData})
 				this.displayGraphOfInterval();
 
-			})
+			}).catch(err => console.log("error:",err))
 		}
 		this.setState({isIntervalValue: true})
 	};
@@ -212,13 +335,16 @@ class Companylist extends Component {
 		let graphSeries = this.state.intervalArray;
 		console.log("length of ========>:",graphSeries.length);
 		let ts2 = 1484418600000;
+		console.log("first intervalData----->",this.state.intervalData);
 		this.state.intervalData = [];
+		console.log("second time============>",this.state.intervalData);
 		for (let i = 0; i < graphSeries.length; i++) {
 			ts2 = ts2 + 86400000;
 			let obj = JSON.parse(graphSeries[i].volume)
 			let innerArr = [ts2,obj];
 			this.state.intervalData.push(innerArr);
 		} 
+		console.log("length--------------->",this.state.intervalData.length);
 		console.log("intervalData ===========>:",this.state.intervalData);
 		console.log("intervalArray ===========>:",this.state.intervalArray.length);
 		let  options ={
@@ -302,125 +428,20 @@ class Companylist extends Component {
 			)
 	}  
 
-	getInfo = () => {
-		axios.get("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords="+this.state.value+"&apikey=Z51NHQ9W28LJMOHB")
-		.then(({ data }) => {
-			this.setState({
-				results: data.data
-			})
-		}) 
-	}
-
-	displayHistoricalData(companySymbol){
-		this.setState({isSelectHistorical: false,isSelectinterval: false})
-		console.log("companySymbol:",companySymbol);
-		axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol="+companySymbol+"&apikey=Z51NHQ9W28LJMOHB")
-		.then(({ data }) => {
-			console.log("isSelectHistorical:",this.state.isSelectHistorical);
-			console.log("data=======>",data['Time Series (Daily)']);
-			const originalObject = data['Time Series (Daily)'];
-			for (let key in originalObject) {
-				this.state.historicalArray.push({
-					date: key,
-					open: originalObject[key]['1. open'],
-					high: originalObject[key]['2. high'],
-					low: originalObject[key]['3. low'],
-					close: originalObject[key]['4. close'],
-					adjclose: originalObject[key]['5. adjusted close'], 
-					volume: originalObject[key]['6. volume']
-				})
-			}
-			console.log('grapharray: ', this.state.historicalArray);
-			console.log("isGraphDisplay before======>",this.state.isGraphDisplay);
-			this.setState({isSelectHistorical: true})
-		})
-	}
-
-	addComapny(){
-		if (this.state.companySymbol) {
-			console.log("addCompany2:",this.state.companySymbol);
-			return(
-				swal({
-					title: this.state.companySymbol,
-					text: this.state.companyName,
-					icon: "success",
-					dangerMode: true,
-				}).then((willDelete) => {
-					if(willDelete){
-						this.updateCompany(this.state.companyName)
-					} else{
-						console.log("no data found");
-					}
-				})
-				)
-		}
-	}
-
-	updateCompany = (companyName) =>{
-		console.log('updatecompany:');
-		localStorage.getItem('email1')
-		let email = localStorage.email1;
-		console.log(companyName)
-		let companyData = [];
-		firebase.firestore().collection("company").where("name", "==", companyName).where("email", "==", email) 
-		.get()
-		.then(function(querySnapshot) {
-			console.log("querySnapshot",querySnapshot)
-			querySnapshot.forEach(function(doc) {
-				const { name, email } = doc.data();
-				console.log("data:",doc.data())
-				companyData.push({
-					key: doc.id,
-					doc,
-					name,
-					email,
-				});
-			});
-			console.log("data1:",companyData.length);
-			if (companyData.length) {
-				console.log('found data', companyData);
-				swal("Already added!","", "info")
-				.then((willDelete) => {
-					if(willDelete){
-						window.location.reload();
-					}
-				})
-			} else{
-				console.log("new company");
-				addCompany1()
-			}
-		});
-
-		let addCompany1 = () =>{
-			localStorage.getItem('email1')
-			let email = localStorage.email1;
-			console.log("isLoaded before:",this.state.isLoaded);
-			this.ref.add({
-				symbol:this.state.companySymbol,
-				name:this.state.companyName,
-				email: email
-			}).then((docRef) => {
-				window.location.reload();
-			})
-			.catch((error) => {
-				console.error("Error adding document: ", error);
-			})
-		}
-
-	}
-
 	selectComparisonCompany = prop => event =>{
-		this.setState({isComparedCompany: true,firstCompany: prop,selectedCompany: event.target.value})
 		this.state.isComparedCompany = true;
-		// this.state.isSelectHistorical = false;
-		// this.state.isSelectinterval = false;
-		// let comparisonOfVolume = []
+		this.state.isSelectHistorical = false;
+		this.state.isSelectinterval = false;
+		this.state.isIndicatorGraph = false;
+		this.state.isIntervalValue = false;
 		console.log("companySymbol=============>",prop);
 		console.log("event=================>",event.target.value);
 		const url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+event.target.value+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
 		fetch(url)
 		.then(res => res.json())
-		.then(res => {const originalObject = res['Time Series (5min)'];
+		.then(res => {
+		this.setState({isComparedCompany: true,firstCompany: prop,isIndicatorGraph:false,selectedCompany: event.target.value})
+			const originalObject = res['Time Series (5min)'];
 			console.log("res==========>",originalObject);
 			for (let key in originalObject) {
 				this.state.comparisonArray1.push({
@@ -433,35 +454,42 @@ class Companylist extends Component {
 				})
 			}	
 			console.log("comparison Array1=======>",this.state.comparisonArray1);
-		});
-		const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
-		fetch(url1)
-		.then(res1 => res1.json())
-		.then(res1 => {const originalObjectforDisply = res1['Time Series (5min)'];
-			console.log("originalObject===========>",originalObjectforDisply);
-			for (let key in originalObjectforDisply) {
-				this.state.comparisonArray2.push({
-					date: key,
-					open: originalObjectforDisply[key]['1. open'],
-					high: originalObjectforDisply[key]['2. high'],
-					low: originalObjectforDisply[key]['3. low'],
-					close: originalObjectforDisply[key]['4. close'],
-					volume: originalObjectforDisply[key]['5. volume']
-				})
-			}	
-			console.log("comparison Array2=======>",this.state.comparisonArray2);
-			this.displayGraphOfComparison();
-		});
+			comparedCompanyData();
+		}).catch(err => {console.log("error=======>",err);})
+		var comparedCompanyData = () =>{
+			var selectedCompany = [];
+			const url1 = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+prop+"&name=apple&interval=5min&apikey= Z51NHQ9W28LJMOHB";
+			fetch(url1)
+			.then(res1 => res1.json())
+			.then(res1 => {
+				console.log("res1============>",res1);
+				const originalObjectforDisply = res1['Time Series (5min)'];
+				console.log("originalObject===========>",originalObjectforDisply);
+				for (let key in originalObjectforDisply) {
+					selectedCompany.push({
+						date: key,
+						open: originalObjectforDisply[key]['1. open'],
+						high: originalObjectforDisply[key]['2. high'],
+						low: originalObjectforDisply[key]['3. low'],
+						close: originalObjectforDisply[key]['4. close'],
+						volume: originalObjectforDisply[key]['5. volume']
+					})
+				}	
+				this.setState({comparisonArray2: selectedCompany})
+				console.log("comparison Array2=======>",this.state.comparisonArray2);
+				if(this.state.comparisonArray2.length && this.state.comparisonArray1.length){
+					this.displayGraphOfComparison();
+				}
+			}).catch(err =>{console.log("error========>",err);})
+		}
 		console.log("this.state.isComparedCompany:",this.state.isComparedCompany);
 	}
 
 	displayGraphOfComparison(){
-		console.log("comparison of graph");
-		console.log("firstCompany:",this.state.firstCompany);
-		console.log("selectedCompany:",this.state.selectedCompany);
-		if(this.state.comparisonArray1.length && this.state.comparisonArray2){
+		if(this.state.comparisonArray1.length && this.state.comparisonArray2.length){
+			this.state.comparisonOfVolume = [];
 			for(let i=0; i<this.state.comparisonArray1.length; i++){
-				this.state.comparisonOfVolume.push({date:this.state.comparisonArray1[i].date,diffence :this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume,first : this.state.comparisonArray2[i].volume,second : this.state.comparisonArray1[i].volume}) ;
+				this.state.comparisonOfVolume.push({date:this.state.comparisonArray1[i].date,diffrence :this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume,first : this.state.comparisonArray2[i].volume,second : this.state.comparisonArray1[i].volume}) ;
 			}
 			console.log("comparison Of Volume==============>",this.state.comparisonOfVolume);
 			return(
@@ -478,16 +506,15 @@ class Companylist extends Component {
 				</TableHead>
 				<TableBody>
 				{this.state.comparisonOfVolume.map(data => (
-					<TableRow key={data.diffence}>
+					<TableRow key={data.diffrence}>
 					<TableCell>{data.date}</TableCell>
 					<TableCell>{data.first}</TableCell>
 					<TableCell>{data.second}</TableCell>
-					<TableCell>{data.diffence}</TableCell>
+					<TableCell>{data.diffrence}</TableCell>
 					</TableRow>
 					))}
 				</TableBody>
 				</Table>
-
 				</Paper>
 				</div>
 				)
@@ -514,7 +541,7 @@ class Companylist extends Component {
 			}
 			console.log("indicatorDataArray:",this.state.indicatorDataArray);
 			this.displayGraphOfIndicator()
-		})
+		}).catch(err => {console.log("error========>",err)})
 	}
 
 	displayGraphOfIndicator(){
@@ -570,7 +597,7 @@ class Companylist extends Component {
 			},
 			yaxis: {
 				min: 0,
-				max: 2500,
+				max: 250,
 				labels: {
 					formatter: function (val) {
 						return (val).toFixed(0);
@@ -608,6 +635,7 @@ class Companylist extends Component {
 	}
 
 	displayCompanyList(){
+
 		console.log("isIndicatorGraph:",this.state.isIndicatorGraph);
 		console.log("isIntervalValue:",this.state.isIntervalValue);
 		const {date} = this.state;
@@ -863,7 +891,7 @@ class Companylist extends Component {
 				</TableHead>
 				<TableBody>
 				{this.state.historicalArray.map(historicalData => (
-					<TableRow>
+					<TableRow key={historicalData.date}>
 					<TableCell component="th" scope="row">{historicalData.date}</TableCell>
 					<TableCell align="right">{historicalData.open}</TableCell>
 					<TableCell align="right">{historicalData.high}</TableCell>
@@ -1145,12 +1173,6 @@ class Companylist extends Component {
 		});
 	}
 
-	componentDidMount() {
-		this.getCompany();
-		this.getDate();
-		this.unsubscribe = this.ref.onSnapshot(this.getCompany);
-	}
-
 	getDate = () => {
 		var date = new Date().toDateString();
 		this.setState({ date });
@@ -1170,8 +1192,13 @@ class Companylist extends Component {
 	}	
 
 	handleClick(data) {
+		this.state.isSelectHistorical = false;
+		this.state.isIndicatorGraph = false;
+		this.state.isComparedCompany = false;
+		this.state.isSelectinterval = false;
+		this.state.isIntervalValue = false;
 		this.setState({
-			isLoaded: false,isSelectinterval: false, isSelectHistorical: false, isSelectinterval: false,isComparedCompany: false
+			isLoaded: false,isSelectinterval: false, isSelectHistorical: false,isComparedCompany: false, isIndicatorGraph: false
 		})
 		console.log('data: ', data);
 		let grapharray = [];
@@ -1242,7 +1269,7 @@ class Companylist extends Component {
 	openCompanyList(){
 		this.setState({isOpenCompanyList: false})
 		console.log("isOpenCompanyList:",this.state.isOpenCompanyList);
-		window.location.hash='/Copmpany-list';
+		window.location.hash='/Company-list';
 	}
 
 	getCompany(){
