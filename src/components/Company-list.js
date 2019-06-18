@@ -440,7 +440,7 @@ class Companylist extends Component {
 		fetch(url)
 		.then(res => res.json())
 		.then(res => {
-		this.setState({isComparedCompany: true,firstCompany: prop,isIndicatorGraph:false,selectedCompany: event.target.value})
+			this.setState({isComparedCompany: true,firstCompany: prop,isIndicatorGraph:false,selectedCompany: event.target.value})
 			const originalObject = res['Time Series (5min)'];
 			console.log("res==========>",originalObject);
 			for (let key in originalObject) {
@@ -473,7 +473,7 @@ class Companylist extends Component {
 						low: originalObjectforDisply[key]['3. low'],
 						close: originalObjectforDisply[key]['4. close'],
 						volume: originalObjectforDisply[key]['5. volume']
-					})
+					}) 
 				}	
 				this.setState({comparisonArray2: selectedCompany})
 				console.log("comparison Array2=======>",this.state.comparisonArray2);
@@ -828,9 +828,10 @@ class Companylist extends Component {
 		</div> : (this.state.searchResponse ? <div>
 			<span className="company_symbol">{this.state.clickCompanySymbol}</span><span style={{color: 'gray'}}>{this.state.clickCompanyName}</span>
 			{this.state.isGraphDisplay ? (<span>
+				<span className="historical_data" style={{padding:10}} onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
 				<TextField
 				select
-				style={{float:'right'}}
+				style={{float:'right',padding:10}}
 				value={this.state.values.intervalRange}
 				onChange={this.selectInterval(this.state.clickCompanySymbol)}
 				InputProps={{
@@ -842,10 +843,10 @@ class Companylist extends Component {
 					{option.label}
 					</MenuItem>
 					))}
-				</TextField><span className="historical_data"  onClick={() =>this.displayHistoricalData(this.state.clickCompanySymbol)}>Historical Data</span>
+				</TextField>
 				<TextField
 				select
-				style={{float:'right'}}
+				style={{float:'right',padding:10}}
 				value={this.state.values.intervalRange}
 				onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
 				InputProps={{
@@ -860,7 +861,7 @@ class Companylist extends Component {
 				</TextField>
 				<TextField
 				select 
-				style={{float:'right'}}
+				style={{float:'right',padding:10}}
 				value={this.state.values.intervalRange}
 				onChange={this.getSelectedIndicatorData(this.state.clickCompanySymbol)}
 				InputProps={{
@@ -921,7 +922,6 @@ class Companylist extends Component {
 			)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
 		var displayData =  this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
 		if(this.state.isOpenSearch && !this.state.isSearchClick){
-			console.log("===========if=======");
 			return(
 				<div>
 				<div className="grid_class">
@@ -933,11 +933,9 @@ class Companylist extends Component {
 				</Button></Link>
 				</div>
 				</div>
-
 				{this.addComapny()}
 				<div className="grid_class1">
 				<div className="company_list">
-
 				<Grid container spacing={1}>
 				<Grid item sm={10}>
 				<p style={{marginLeft: 18}}>Manage WatchList</p>
@@ -1319,42 +1317,42 @@ class Companylist extends Component {
 			})
 		}
 		var displayGraph = () => {
-						console.log("companyData before:",this.state.companyData);
-						console.log("companyData:",this.state.companyData);
-						let firstCompanySymbol = this.state.companyData[1];
-						console.log("firstCompanySymbol",firstCompanySymbol);
-						this.handleClick(firstCompanySymbol)
-					}
-		}	
-
-		render() {
-
-			const { isLoaded} = this.state;
-
-			if (!isLoaded) {
-				return (
-					<center>
-					<div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-					</center>
-					)
-			} else if(isLoaded){
-				return(
-					<div className="main">
-					{this.displayCompanyList()}
-					</div>
-					)
-
-			} else{
-				return(
-					<div>
-					<h2>Sorry no data found</h2>
-					</div>
-					);
-			}
+			console.log("companyData before:",this.state.companyData);
+			console.log("companyData:",this.state.companyData);
+			let firstCompanySymbol = this.state.companyData[1];
+			console.log("firstCompanySymbol",firstCompanySymbol);
+			this.handleClick(firstCompanySymbol)
 		}
+	}	
 
+	render() {
+
+		const { isLoaded} = this.state;
+
+		if (!isLoaded) {
+			return (
+				<center>
+				<div className="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+				</center>
+				)
+		} else if(isLoaded){
+			return(
+				<div className="main">
+				{this.displayCompanyList()}
+				</div>
+				)
+
+		} else{
+			return(
+				<div>
+				<h2>Sorry no data found</h2>
+				</div>
+				);
+		}
 	}
 
+}
 
-	export default Companylist
+
+export default Companylist
 
