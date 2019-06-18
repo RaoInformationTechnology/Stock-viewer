@@ -265,7 +265,7 @@ class Companylist extends Component {
 			fetch(url)
 			.then(res => res.json())
 			.then(res => {
-				this.setState({ isIntervalValue:true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval:prop, graphData:[]});
+				this.setState({ isIntervalValue:true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval:prop, graphData:[], isLoaded: true});
 				const originalObject = res['Monthly Time Series'];
 				console.log('originalObject: ', originalObject);
 				console.log("interval array======second time===>",this.state.intervalArray);
@@ -301,7 +301,7 @@ class Companylist extends Component {
 						volume: originalObject[key]['5. volume']
 					})
 				}console.log("interval intervalArray",this.state.intervalArray);
-				this.setState({intervalArray:intervalApiData})
+				this.setState({intervalArray:intervalApiData,isLoaded: false})
 				this.displayGraphOfInterval();
 			}).catch(err => console.log("error:",err))
 		} else{
@@ -904,8 +904,8 @@ class Companylist extends Component {
 				</TableBody>
 				</Table>
 				</Paper>
-				</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>hello{this.displayGraphOfInterval()}</div> : <div>{this.state.isIndicatorGraph ? <div>Indicatorgraph{this.displayGraphOfIndicator()}</div> : <div>{this.state.isComparedCompany ? <div>compared company{this.displayGraphOfComparison()}</div> : <div>no condition{chartrender}</div>}</div>}</div>}</div>  
-				: <div>no graph</div>}</div>)}</div> 
+				</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>{this.displayGraphOfInterval()}</div> : <div>{this.state.isIndicatorGraph ? <div>{this.displayGraphOfIndicator()}</div> : <div>{this.state.isComparedCompany ? <div>{this.displayGraphOfComparison()}</div> : <div>{chartrender}</div>}</div>}</div>}</div>  
+				: <div></div>}</div>)}</div> 
 				: 'No data found')
 		var displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
 			<List key={company.key} className="cursorClass">
@@ -1287,14 +1287,14 @@ class Companylist extends Component {
 					doc,
 					name,
 					symbol,
-				});
+				}); 
 			});
 			setLoader(true);
 			if (companyData.length) {
 				console.log('found data==========>', companyData);
 				setTheState(companyData);
 				console.log("call");
-				// displayGraph()
+				displayGraph()
 			}else{
 				return(
 					<div>
@@ -1318,13 +1318,13 @@ class Companylist extends Component {
 				isLoaded: true
 			})
 		}
-		// var displayGraph = () => {
-			// 			console.log("companyData before:",this.state.companyData);
-			// 			console.log("companyData:",this.state.companyData);
-			// 			let firstCompanySymbol = this.state.companyData[1];
-			// 			console.log("firstCompanySymbol",firstCompanySymbol);
-			// 			this.handleClick(firstCompanySymbol)
-			// 		}
+		var displayGraph = () => {
+						console.log("companyData before:",this.state.companyData);
+						console.log("companyData:",this.state.companyData);
+						let firstCompanySymbol = this.state.companyData[1];
+						console.log("firstCompanySymbol",firstCompanySymbol);
+						this.handleClick(firstCompanySymbol)
+					}
 		}	
 
 		render() {
