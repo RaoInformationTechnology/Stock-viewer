@@ -8,14 +8,15 @@ class App extends Component {
     super(props);
     this.state = localStorage.getItem('email1');
   }
+
   render() {
-    if(!this.state){
+    if (!this.state) {
             return (
                 <div>
                 <Login />
                 </div>
                 );
-        }else{
+        } else {
             return (
                 <div>
                 <Companylist />

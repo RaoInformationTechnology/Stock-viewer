@@ -12,7 +12,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
-class Create extends Component {
+class SignUp extends Component {
 
   constructor() {
     super();
@@ -26,6 +26,7 @@ class Create extends Component {
     };
     this.toggleShow = this.toggleShow.bind(this);
   }
+
   onChange = (e) => {
     const state = this.state
     state[e.target.name] = e.target.value;
@@ -33,11 +34,13 @@ class Create extends Component {
     console.log("state=============?",this.state.username);
   }
 
+  /**show or hide password field value */
   toggleShow() {
     this.setState({ hidden: !this.state.hidden });
   }
 
-  onSubmit = (e) => {
+  /**signUp and add data to databse */
+  signUp = (e) => {
     e.preventDefault();
     const {email, password, username } = this.state;
     console.log('users: ', email, password, username);
@@ -88,6 +91,7 @@ class Create extends Component {
     });
   };
 
+  /**username and password validation */
   isDisabled(){
     if(!this.state.username || !this.state.password || !(this.state.password.length >='6'))
     return true;  
@@ -158,7 +162,7 @@ class Create extends Component {
         />
         </Grid>
         <Grid item sm={12} xs={12}>
-        <Button color="primary" disabled={this.isDisabled()} variant="contained" size="large" onClick={(e)=>this.onSubmit(e)}>
+        <Button color="primary" disabled={this.isDisabled()} variant="contained" size="large" onClick={(e)=>this.signUp(e)}>
         SignUp
         </Button>
         </Grid>
@@ -175,4 +179,4 @@ class Create extends Component {
         );
     }
   }
-  export default Create;
+  export default SignUp;

@@ -4,7 +4,7 @@ import { HashRouter, Route } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import Create from './components/Create';
+import Signup from './components/Sign-up';
 import Login from './components/Login';
 import Companylist from './components/Company-list';
 // import Demo from './components/demo';
@@ -14,8 +14,8 @@ ReactDOM.render(
   <HashRouter>
   <div>
   <Route exact path='/' component={App} />
-  <Route path='/create' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
-          : (<Route component={Create} />) 
+  <Route path='/sign-up' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
+          : (<Route component={Signup} />) 
           )}/>
   <Route path='/login' render={() =>( localStorage.getItem('email1') ? ( <Route  component={Companylist} />)
           : (<Route component={Login} />) 

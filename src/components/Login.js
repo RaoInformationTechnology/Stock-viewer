@@ -28,7 +28,6 @@ class Login extends Component {
     this.toggleShow = this.toggleShow.bind(this);
   }
 
-
   onCollectionUpdate = (querySnapshot) => {
     const user = [];
     querySnapshot.forEach((doc) => {
@@ -49,6 +48,7 @@ class Login extends Component {
     this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate);
   }
 
+  /**hide or show password field value */
   toggleShow() {
     this.setState({ hidden: !this.state.hidden });
   }
@@ -57,7 +57,8 @@ class Login extends Component {
     this.setState({ [event.target.name]: event.target.value });
   };
 
-  handleSubmit = (event) => {
+  /**sign in with email and password */
+  signInWithEmailAndPassword = (event) => {
     event.preventDefault();
     const { email, password } = this.state;
     console.log(email);
@@ -68,12 +69,15 @@ class Login extends Component {
       this.setState({loginUser: email})
       localStorage.setItem('email1',email);
       console.log("login sucessfully");
+      // console.log("props::::::::::::::::::::::::",this.props);
+      // this.props.history.push("/Company-list");
+      // console.log("props::::::::::::::::::::::::=================================>",this.props);
       window.location.hash='/Company-list'
     }).catch((error) => {
       console.log('hey error: ', error);
-      if(error.code === "auth/user-not-found"){
+      if (error.code === "auth/user-not-found") {
         swal("Email not found","Please, Signup","error");
-      } else{
+      } else {
         swal("Please Enter correct password","","error");
       }
     })
@@ -127,14 +131,14 @@ class Login extends Component {
       />
       </Grid>
       <Grid item sm={12} xs={12}>
-      <Button color="primary" disabled={!this.state.email || !this.state.password} variant="contained" size="large" onClick={(event)=>this.handleSubmit(event)}>
+      <Button color="primary" disabled={!this.state.email || !this.state.password} variant="contained" size="large" onClick={(event)=>this.signInWithEmailAndPassword(event)}>
       Login
       </Button>
       </Grid>
       <Grid item sm={12}>
       <Divider />
       <div className="text-center">
-      New User? <Button color="primary"><Link to="/create">Sign Up</Link></Button>
+      New User? <Button color="primary"><Link to="/sign-up">Sign Up</Link></Button>
       </div>
       </Grid>
       </Grid>
