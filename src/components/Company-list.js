@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 import firebase from '../Firebase';
 import ReactApexChart from 'react-apexcharts';
-import Config from '../config';
 import swal from 'sweetalert';
 import '../App.css';
 import './Company-list.css';
@@ -26,7 +24,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-let config = new Config();
+import API from '../service';
+
 let options = {
 	chart: {
 		stacked: false,
@@ -92,71 +91,6 @@ let options = {
 	}
 }
 
-let options1 = {
-	chart: {
-		stacked: false,
-		zoom: {
-			type: 'x',
-			enabled: true
-		},
-		toolbar: {
-			autoSelected: 'zoom'
-		}
-	},
-	plotOptions: {
-		line: {
-			curve: 'smooth',
-		}
-	},
-	dataLabels: {
-		enabled: false
-	},
-
-	markers: {
-		size: 0,
-		style: 'full',
-	},
-	colors: ['#ff4d4d'],
-	opacity: 0.4,
-	title: {
-		text: 'Stock Price Movement',
-		align: 'left'
-	},
-	fill: {
-		type: 'gradient',
-		gradient: {
-			shadeIntensity: 1,
-			inverseColors: false,
-			opacityFrom: 0.5,
-			opacityTo: 0,
-			stops: [0, 90, 100]
-		},
-	},
-	yaxis: {
-		min: 500000,
-		max: 5500000,
-		labels: {
-			formatter: function (val) {
-				return (val).toFixed(0);
-			},
-		},
-		title: {
-			text: 'Price'
-		},
-	},
-	xaxis: {
-		type: 'datetime',
-	},
-	tooltip: {
-		shared: false,
-		y: {
-			formatter: function (val) {
-				return (val / 1000).toFixed(0)
-			}
-		}
-	}
-}
-
 const ranges = [
 	{
 		value: '1min',
@@ -188,6 +122,56 @@ const ranges = [
 	},
 ];
 
+const indicatorList = [
+	{
+		value: 'SMA',
+		label: 'simple moving average (SMA)',
+	},
+	{
+		value: 'EMA',
+		label: ' Exponential moving average (EMA) '
+	},
+	{
+		value: 'MACD',
+		label: 'Moving average convergence / divergence (MACD)',
+	},
+	{
+		value: 'MACDEXT',
+		label: 'Moving average convergence / divergence'
+	},
+	{
+		value: 'APO',
+		label: 'Absolute price oscillator (APO)',
+	},
+	{
+		value: 'RSI',
+		label: 'Relative strength index (RSI)',
+	},
+	{
+		value: 'ROC',
+		label: ' Rate of change(ROC)'
+	},
+	{
+		value: 'ROCR',
+		label: 'Rate of change ratio (ROCR)'
+	},
+	{
+		value: 'ADX',
+		label: 'Average directional movement index (ADX) ',
+	},
+	{
+		value: 'AROONOSC',
+		label: ' Aroon oscillator (AROONOSC)'
+	},
+	{
+		value: 'TRIX',
+		label: 'Triple smooth exponential moving average (TRIX)',
+	},
+	{
+		value: 'OBV',
+		label: 'On balance volume (OBV) ',
+	}
+];
 
 class Companylist extends Component {
 
@@ -239,6 +223,7 @@ class Companylist extends Component {
 			intervalRange: '',
 			clickCompanyName: '',
 			clickCompanySymbol: '',
+			firstSelectedCompany: '',
 			isToggleOn: true,
 			setOpen: false,
 			modalOpen: false,
@@ -301,28 +286,54 @@ class Companylist extends Component {
 	 * @param {*} companySymbol wise display historical data table 
 	 */
 	displayHistoricalData(companySymbol) {
+		const historicalData = {
+			symbol: companySymbol
+		}
 		console.log("symbol of selected company==============>", companySymbol);
 		this.setState({ isSelectHistorical: true, isSelectinterval: false, historicalArray: [], isComparedCompany: false })
-		const url = config.getBaseUrl() + "TIME_SERIES_DAILY_ADJUSTED&symbol=" + companySymbol + config.getBaseUrlForKey();
-		fetch(url)
-			.then(res => res.json())
-			.then(res => {
-				const originalObject = res['Time Series (Daily)'];
-				console.log('originalObject: ', originalObject);
-				for (let key in originalObject) {
-					this.state.historicalArray.push({
-						date: key,
-						open: originalObject[key]['1. open'],
-						high: originalObject[key]['2. high'],
-						low: originalObject[key]['3. low'],
-						close: originalObject[key]['4. close'],
-						adjclose: originalObject[key]['5. adjusted close'],
-						volume: originalObject[key]['6. volume']
-					})
+		API.displayHistoricalData(historicalData)
+			.then((res, err) => {
+				try {
+					const originalObject = res['Time Series (Daily)'];
+					console.log('originalObject: ', originalObject);
+					for (let key in originalObject) {
+						this.state.historicalArray.push({
+							date: key,
+							open: originalObject[key]['1. open'],
+							high: originalObject[key]['2. high'],
+							low: originalObject[key]['3. low'],
+							close: originalObject[key]['4. close'],
+							adjclose: originalObject[key]['5. adjusted close'],
+							volume: originalObject[key]['6. volume']
+						})
+					}
+					console.log("historicalArray==========>", this.state.historicalArray);
+					this.setState({ isSelectHistorical: true })
+				} catch (err) {
+					console.log("err====", err);
+					swal('internal server error');
 				}
-				console.log("historicalArray==========>", this.state.historicalArray);
-				this.setState({ isSelectHistorical: true })
-			}).catch((err) => { swal('internal server error'); })
+			});
+		// const url = config.getBaseUrl() + "TIME_SERIES_DAILY_ADJUSTED&symbol=" + companySymbol + config.getBaseUrlForKey();
+		// fetch(url)
+		// 	.then(res => res.json())
+		// 	.then(res => {
+		// 		const originalObject = res['Time Series (Daily)'];
+		// 		console.log('originalObject: ', originalObject);
+		// 		for (let key in originalObject) {
+		// 			this.state.historicalArray.push({
+		// 				date: key,
+		// 				open: originalObject[key]['1. open'],
+		// 				high: originalObject[key]['2. high'],
+		// 				low: originalObject[key]['3. low'],
+		// 				close: originalObject[key]['4. close'],
+		// 				adjclose: originalObject[key]['5. adjusted close'],
+		// 				volume: originalObject[key]['6. volume']
+		// 			})
+		// 		}
+		// 		console.log("historicalArray==========>", this.state.historicalArray);
+		// 		this.setState({ isSelectHistorical: true })
+		// 	}).catch((err) => { swal('internal server error'); })
 	}
 
 	/** selected symbol to add in watchlist */
@@ -406,20 +417,24 @@ class Companylist extends Component {
 	/**api call for selected interval value */
 	selectInterval = prop => event => {
 		this.state.isSelectHistorical = false;
-		var intervalApiData = [];
-		console.log("event:", event.target.value);
-		console.log("prop:", prop);
-		console.log("interval array=========>", this.state.intervalArray);
-		
-		if (event.target.value === 'MONTHLY') {
-			this.state.intervalArray = [];
-			this.state.isComparedCompany = false;
-			const url = config.getBaseUrl() + "TIME_SERIES_MONTHLY&symbol=" + prop + "&name=apple&interval=5min" + config.getBaseUrlForKey();
-			fetch(url)
-				.then(res => res.json())
-				.then(res => {
+		let intervalApiData = [];
+		this.state.intervalArray = [];
+		this.state.isComparedCompany = false;
+		const intervalData = {
+			symbol: prop,
+			intervalValue: event.target.value
+		}
+		API.selectInterval(intervalData)
+			.then((res, err) => {
+				try {
 					this.setState({ isIntervalValue: true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval: prop, graphData: [], isLoaded: true });
-					const originalObject = res['Monthly Time Series'];
+					if (event.target.value === 'MONTHLY') {
+						var originalObject = res['Monthly Time Series'];
+					} else if (event.target.value === 'WEEKLY') {
+						var originalObject = res['Weekly Time Series'];
+					} else {
+						var originalObject = res['Time Series (' + event.target.value + ')'];
+					}
 					console.log('originalObject: ', originalObject);
 					console.log("interval array======second time===>", this.state.intervalArray);
 					for (let key in originalObject) {
@@ -434,81 +449,34 @@ class Companylist extends Component {
 					}
 					this.setState({ intervalArray: intervalApiData })
 					this.displayGraphOfInterval();
-				}).catch(err => swal('internal server error'))
-		} else if (event.target.value === 'WEEKLY') {
-			this.state.intervalArray = [];
-			const url = config.getBaseUrl() + "TIME_SERIES_WEEKLY&symbol=" + prop + "&name=apple&interval=5min" + config.getBaseUrlForKey();
-			fetch(url)
-				.then(res => res.json())
-				.then(res => {
-					this.setState({ isIntervalValue: true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval: prop, graphData: [] });
-					const originalObject = res['Weekly Time Series'];
-					for (let key in originalObject) {
-						intervalApiData.push({
-							date: key,
-							open: originalObject[key]['1. open'],
-							high: originalObject[key]['2. high'],
-							low: originalObject[key]['3. low'],
-							close: originalObject[key]['4. close'],
-							volume: originalObject[key]['5. volume']
-						})
-					} console.log("interval intervalArray", this.state.intervalArray);
-					this.setState({ intervalArray: intervalApiData })
-					this.displayGraphOfInterval();
-				}).catch(err => swal('internal server error'))
-		} else {
-			this.state.intervalArray = [];
-			const url = config.getBaseUrl() + "TIME_SERIES_INTRADAY&symbol=" + prop + "&name=apple&interval=" + event.target.value + config.getBaseUrlForKey();
-			fetch(url)
-				.then(res => res.json())
-				.then(res => {
-					this.setState({ isIntervalValue: true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval: prop, graphData: [] });
-					const originalObject = res['Time Series (' + event.target.value + ')'];
-					for (let key in originalObject) {
-						intervalApiData.push({
-							date: key,
-							open: originalObject[key]['1. open'],
-							high: originalObject[key]['2. high'],
-							low: originalObject[key]['3. low'],
-							close: originalObject[key]['4. close'],
-							volume: originalObject[key]['5. volume']
-						})
-					} console.log("interval intervalArray", this.state.intervalArray);
-					this.setState({ intervalArray: intervalApiData })
-					this.displayGraphOfInterval();
-
-				}).catch(err => swal('internal server error'))
-		}
+				} catch (err) {
+					console.log("err====", err);
+					swal('internal server error');
+				}
+			});
 		this.setState({ isIntervalValue: true })
 	};
 
 	/**display graph of selected interval */
 	displayGraphOfInterval() {
-		console.log("inside function intervalArray=====>", this.state.intervalArray);
+
 		let graphSeries = this.state.intervalArray;
-		console.log("length of ========>:", graphSeries.length);
 		let ts2 = 1484418600000;
-		console.log("first intervalData----->", this.state.intervalData);
 		this.state.intervalData = [];
-		console.log("second time============>", this.state.intervalData);
 		for (let i = 0; i < graphSeries.length; i++) {
 			ts2 = ts2 + 86400000;
 			let obj = JSON.parse(graphSeries[i].volume)
 			let innerArr = [ts2, obj];
 			this.state.intervalData.push(innerArr);
 		}
-		console.log("length--------------->", this.state.intervalData.length);
-		console.log("intervalData ===========>:", this.state.intervalData);
-		console.log("intervalArray ===========>:", this.state.intervalArray.length);
-
 		let series = [{
 			name: 'Stock price',
 			type: 'area',
 			data: this.state.intervalData
 		}
 		]
-		console.log("before=========>", this.state.intervalData);
-		var chartrender =
+		/**display chart of selected interval */
+		let chartrender =
 			<div id="chart">
 				<ReactApexChart options={options} series={series} type="area" height="500" />
 			</div>
@@ -525,41 +493,48 @@ class Companylist extends Component {
 		this.state.isSelectinterval = false;
 		this.state.isIndicatorGraph = false;
 		this.state.isIntervalValue = false;
-		console.log("companySymbol=============>", prop);
-		console.log("event=================>", event.target.value);
-		const url = config.getBaseUrl() + "TIME_SERIES_INTRADAY&symbol=" + event.target.value + "&name=apple&interval=5min" + config.getBaseUrlForKey();
-		fetch(url)
-			.then(res => res.json())
-			.then(res => {
-				this.setState({ isComparedCompany: true, firstCompany: prop, isIndicatorGraph: false, selectedCompany: event.target.value })
-				const originalObject = res['Time Series (5min)'];
-				console.log("res==========>", originalObject);
-				for (let key in originalObject) {
-					this.state.comparisonArray1.push({
-						date: key,
-						open: originalObject[key]['1. open'],
-						high: originalObject[key]['2. high'],
-						low: originalObject[key]['3. low'],
-						close: originalObject[key]['4. close'],
-						volume: originalObject[key]['5. volume']
-					})
+		const companySymbol = event.target.value
+		console.log("proppppppppppppppppppppppppppppppppppp:", prop)
+		API.selectComparisonCompany(companySymbol)
+			.then((res, err) => {
+				try {
+					this.setState({ isComparedCompany: true, firstCompany: prop, isIndicatorGraph: false, selectedCompany: event.target.value })
+					const originalObject = res['Time Series (5min)'];
+					console.log("res==========>", originalObject);
+					for (let key in originalObject) {
+						this.state.comparisonArray1.push({
+							date: key,
+							open: originalObject[key]['1. open'],
+							high: originalObject[key]['2. high'],
+							low: originalObject[key]['3. low'],
+							close: originalObject[key]['4. close'],
+							volume: originalObject[key]['5. volume']
+						})
+					}
+					console.log("comparison Array1=======>", this.state.comparisonArray1);
+					this.comparedCompanyData();
+				} catch (err) {
+					console.log("err:", err)
+					swal('internal server error');
 				}
-				console.log("comparison Array1=======>", this.state.comparisonArray1);
-				comparedCompanyData();
-			}).catch(err => { swal('internal server error') })
+			});
+		console.log("this.state.isComparedCompany:", this.state.isComparedCompany);
+	}
 
-		/**get data of other selected company data */	
-		let comparedCompanyData = () => {
-			var selectedCompany = [];
-			const url1 = config.getBaseUrl() + "TIME_SERIES_INTRADAY&symbol=" + prop + "&name=apple&interval=5min" + config.getBaseUrlForKey();
-			fetch(url1)
-				.then(res1 => res1.json())
-				.then(res1 => {
-					console.log("res1============>", res1);
-					if (res1.Note == 'Thank you for using Alpha Vantage! Our standard AP…would like to target a higher API call frequency.') {
+
+	/**get data of first selected company  */
+	comparedCompanyData = () => {
+		console.log("oriooooooooooooooooo:");
+		let selectedCompany = [];
+		let firstSelectedCompany = this.state.firstCompany;
+		API.selectComparisonCompany(firstSelectedCompany)
+			.then((res, err) => {
+				try {
+					console.log("res============>", res);
+					if (res.Note == 'Thank you for using Alpha Vantage! Our standard AP…would like to target a higher API call frequency.') {
 						alert('wait 1 minute');
 					} else {
-						const originalObjectforDisplay = res1['Time Series (5min)'];
+						const originalObjectforDisplay = res['Time Series (5min)'];
 						console.log("originalObject===========>", originalObjectforDisplay);
 						for (let key in originalObjectforDisplay) {
 							selectedCompany.push({
@@ -574,12 +549,14 @@ class Companylist extends Component {
 						this.setState({ comparisonArray2: selectedCompany })
 						console.log("comparison Array2=======>", this.state.comparisonArray2);
 					}
+					/**selecte other company then call below function */
 					if (this.state.comparisonArray2.length && this.state.comparisonArray1.length) {
 						this.displayGraphOfComparison();
 					}
-				}).catch(err => { swal('internal server error'); })
-		}
-		console.log("this.state.isComparedCompany:", this.state.isComparedCompany);
+				} catch (err) {
+					swal('internal server error');
+				}
+			});
 	}
 
 	/**display table of both company*/
@@ -622,24 +599,30 @@ class Companylist extends Component {
 	getSelectedIndicatorData = prop => event => {
 		console.log("event:", event.target.value);
 		console.log("prop:", prop);
-		const url = config.getBaseUrl() + event.target.value + "&symbol=" + prop + "&interval=monthly&time_period=10&series_type=open" + config.getBaseUrlForKey();
-		fetch(url)
-			.then(res => res.json())
-			.then(res => {
-				this.setState({ indicatorGraphData: [], indicatorDataArray: [], isIndicatorGraph: true, isIntervalValue: false, isSelectHistorical: false, isComparedCompany: false })
-				const originalObject = res['Technical Analysis: ' + [event.target.value]];
-				console.log("result:", ['Technical Analysis: ' + [event.target.value]]);
-				console.log("originalObject:", originalObject);
-				console.log("isIndicatorGraph:", this.state.isIndicatorGraph);
-				for (let key in originalObject) {
-					this.state.indicatorDataArray.push({
-						date: key,
-						indicatorObj: originalObject[key][event.target.value],
-					})
+		const indicatorData = {
+			selectedCompanySymbol: prop,
+			indicatorValue: event.target.value
+		}
+		API.getSelectedIndicatorData(indicatorData)
+			.then((res, err) => {
+				try {
+					this.setState({ indicatorGraphData: [], indicatorDataArray: [], isIndicatorGraph: true, isIntervalValue: false, isSelectHistorical: false, isComparedCompany: false })
+					const originalObject = res['Technical Analysis: ' + [event.target.value]];
+					console.log("result:", ['Technical Analysis: ' + [event.target.value]]);
+					console.log("originalObject:", originalObject);
+					console.log("isIndicatorGraph:", this.state.isIndicatorGraph);
+					for (let key in originalObject) {
+						this.state.indicatorDataArray.push({
+							date: key,
+							indicatorObj: originalObject[key][event.target.value],
+						})
+					}
+					console.log("indicatorDataArray:", this.state.indicatorDataArray);
+					this.displayGraphOfIndicator()
+				} catch (err) {
+					swal('internal server error');
 				}
-				console.log("indicatorDataArray:", this.state.indicatorDataArray);
-				this.displayGraphOfIndicator()
-			}).catch(err => { swal('internal server error'); })
+			});
 	}
 
 	/**display graph of selected indicator */
@@ -723,7 +706,7 @@ class Companylist extends Component {
 			data: this.state.indicatorGraphData
 		},
 		]
-		var chartrender =
+		let chartrender =
 			<div id="chart">
 				<ReactApexChart options={options} series={series} type="area" height="500" />
 			</div>
@@ -740,56 +723,7 @@ class Companylist extends Component {
 		console.log("isIntervalValue:", this.state.isIntervalValue);
 		const { date } = this.state;
 
-		const indicatorList = [
-			{
-				value: 'SMA',
-				label: 'simple moving average (SMA)',
-			},
-			{
-				value: 'EMA',
-				label: ' Exponential moving average (EMA) '
-			},
-			{
-				value: 'MACD',
-				label: 'Moving average convergence / divergence (MACD)',
-			},
-			{
-				value: 'MACDEXT',
-				label: 'Moving average convergence / divergence'
-			},
-			{
-				value: 'APO',
-				label: 'Absolute price oscillator (APO)',
-			},
-			{
-				value: 'RSI',
-				label: 'Relative strength index (RSI)',
-			},
-			{
-				value: 'ROC',
-				label: ' Rate of change(ROC)'
-			},
-			{
-				value: 'ROCR',
-				label: 'Rate of change ratio (ROCR)'
-			},
-			{
-				value: 'ADX',
-				label: 'Average directional movement index (ADX) ',
-			},
-			{
-				value: 'AROONOSC',
-				label: ' Aroon oscillator (AROONOSC)'
-			},
-			{
-				value: 'TRIX',
-				label: 'Triple smooth exponential moving average (TRIX)',
-			},
-			{
-				value: 'OBV',
-				label: 'On balance volume (OBV) ',
-			}
-		];
+		/**any company added into current user watchlist */
 		if (this.state.grapharray.length) {
 			console.log('hey i m called');
 			let graphSeries = this.state.grapharray;
@@ -843,8 +777,7 @@ class Companylist extends Component {
 					onChange={this.selectInterval(this.state.clickCompanySymbol)}
 					InputProps={{
 						startAdornment: <InputAdornment position="start">Interval</InputAdornment>,
-					}}
-				>
+					}}>
 					{ranges.map(option => (
 						<MenuItem key={option.value} value={option.value}>
 							{option.label}
@@ -858,8 +791,7 @@ class Companylist extends Component {
 					onChange={this.selectComparisonCompany(this.state.clickCompanySymbol)}
 					InputProps={{
 						startAdornment: <InputAdornment position="start">Comparison</InputAdornment>,
-					}}
-				>
+					}}>
 					{this.state.companyData.map(company => (
 						<MenuItem key={company.symbol} value={company.symbol}>
 							{company.symbol}
@@ -873,8 +805,7 @@ class Companylist extends Component {
 					onChange={this.getSelectedIndicatorData(this.state.clickCompanySymbol)}
 					InputProps={{
 						startAdornment: <InputAdornment position="start">Indicator</InputAdornment>,
-					}}
-				>
+					}}>
 					{indicatorList.map(indicator => (
 						<MenuItem key={indicator.value} value={indicator.value} >
 							{indicator.label}
@@ -928,6 +859,7 @@ class Companylist extends Component {
 			</List>
 		)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
 		let displayData = this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
+
 		/**when searchbar is open but not enter a value */
 		if (this.state.isOpenSearch && !this.state.isSearchClick) {
 			return (
@@ -978,7 +910,7 @@ class Companylist extends Component {
 								/>
 								<Button id="search" onClick={this.submitSearchValue} style={{ color: '#fff' }} disabled={!this.state.value} autoFocus>
 									Search
-				</Button>
+								</Button>
 							</Typography>
 						</div>
 					</div>
@@ -1154,31 +1086,35 @@ class Companylist extends Component {
 	/**get data of searching company */
 	getApiData() {
 		console.log("value:", this.state.value);
-		axios.get(config.getBaseUrl() + "SYMBOL_SEARCH&keywords=" + this.state.value + config.getBaseUrlForKey())
-			.then((data) => {
-				console.log("data of response:", data.data['bestMatches']);
-				this.setState({
-					searchResponse: data.data['bestMatches'],
-					isSearchClick: true,
-					isLoaded: true
-				});
-				if (!this.state.searchResponse.length) {
-					console.log("searchrespone:", this.state.searchResponse.length);
-					console.log("===if callling===");
-					return (
-						<div>
-							"No Data Found"
-					</div>
-					)
+		const companySymbol = this.state.value;
+		API.getApiData(companySymbol)
+			.then((res, err) => {
+				try {
+					console.log("resssssssss:", res);
+					console.log("data of response:", res['bestMatches']);
+					this.setState({
+						searchResponse: res['bestMatches'],
+						isSearchClick: true,
+						isLoaded: true
+					});
+					if (!this.state.searchResponse.length) {
+						console.log("searchrespone:", this.state.searchResponse.length);
+						console.log("===if callling===");
+						return (
+							<div>
+								"No Data Found"
+							</div>
+						)
+					}
+				} catch (err) {
+					swal('internal server error');
 				}
-			}).catch(function (error) {
-				swal('internal server error');
 			});
 	}
 
 	/**get current date */
 	getDate = () => {
-		var date = new Date().toDateString();
+		let date = new Date().toDateString();
 		this.setState({ date });
 	};
 
@@ -1212,56 +1148,56 @@ class Companylist extends Component {
 		})
 		console.log('data: ', data);
 		let grapharray = [];
-		const url = config.getBaseUrl() + "TIME_SERIES_INTRADAY&symbol=" + data.symbol + "&name=apple&interval=5min" + config.getBaseUrlForKey();
-		fetch(url)
-			.then(res => res.json())
-			.then(res => { console.log(res); return res; if (res.Note == 'Thank you for using Alpha Vantage! Our standard AP…would like to target a higher API call frequency.') { console.log("hellooooooooooooooooooooooooooooooooo"); } })
-			.then(res => {
-				if (!res) {
-					swal("Click after a minute");
-				} else {
-					const originalObject = res['Time Series (5min)'];
-					for (let key in originalObject) {
-						grapharray.push({
-							date: key,
-							open: originalObject[key]['1. open'],
-							high: originalObject[key]['2. high'],
-							low: originalObject[key]['3. low'],
-							close: originalObject[key]['4. close'],
-							volume: originalObject[key]['5. volume']
-						})
-					}
-					console.log('grapharray: ', grapharray);
-					if (!grapharray.length) {
-						console.log("helloooooooooooooooooooooooooo");
-						setTimeout(this.setState({ isLoaded: true }), 3000);
-						swal('click after a minue')
+		const companySymbol = data.symbol;
+		API.displaySelectedCompanyGraph(companySymbol)
+			.then((res, err) => {
+				try {
+					if (!res) {
+						swal("Click after a minute");
 					} else {
-						console.log("open:", grapharray['0'].open);
-						console.log("isGraphDisplay before======>", this.state.isGraphDisplay);
-						this.setState({
-							grapharray: grapharray,
-							open: grapharray['0'].open,
-							close: grapharray['0'].close,
-							high: grapharray['0'].high,
-							low: grapharray['0'].low,
-							volume: grapharray['0'].volume,
-							clickCompanyName: data.name,
-							clickCompanySymbol: data.symbol,
-							isLoaded: true,
-							isGraphDisplay: true
-						})
-						console.log("isGraphDisplay after======>", this.state.isGraphDisplay);
+						const originalObject = res['Time Series (5min)'];
+						for (let key in originalObject) {
+							grapharray.push({
+								date: key,
+								open: originalObject[key]['1. open'],
+								high: originalObject[key]['2. high'],
+								low: originalObject[key]['3. low'],
+								close: originalObject[key]['4. close'],
+								volume: originalObject[key]['5. volume']
+							})
+						}
+						console.log('grapharray: ', grapharray);
+						if (!grapharray.length) {
+							console.log("helloooooooooooooooooooooooooo");
+							setTimeout(this.setState({ isLoaded: true }), 3000);
+							swal('click after a minue')
+						} else {
+							console.log("open:", grapharray['0'].open);
+							console.log("isGraphDisplay before======>", this.state.isGraphDisplay);
+							this.setState({
+								grapharray: grapharray,
+								open: grapharray['0'].open,
+								close: grapharray['0'].close,
+								high: grapharray['0'].high,
+								low: grapharray['0'].low,
+								volume: grapharray['0'].volume,
+								clickCompanyName: data.name,
+								clickCompanySymbol: data.symbol,
+								isLoaded: true,
+								isGraphDisplay: true
+							})
+							console.log("isGraphDisplay after======>", this.state.isGraphDisplay);
+						}
 					}
-				}
 
-			}).catch((error) => {
-				swal('internal server error');
+				} catch (err) {
+					swal('internal server error');
+				}
 			});
 	}
 
 	/**logout and clear localstorage */
-	logOut= () => {
+	logOut = () => {
 		firebase
 			.auth()
 			.signOut().then(function () {
@@ -1290,8 +1226,8 @@ class Companylist extends Component {
 	openCompanyList() {
 		this.setState({ isOpenCompanyList: false })
 		console.log("isOpenCompanyList:", this.state.isOpenCompanyList);
-		this.props.history.push("/Company-list")
-		// window.location.hash = '/Company-list';
+		// this.props.history.push("/Company-list")
+		window.location.hash = '/Company-list';
 	}
 
 	/**get current user added company from database */
@@ -1317,7 +1253,7 @@ class Companylist extends Component {
 					console.log('found data==========>', companyData);
 					setTheState(companyData);
 					console.log("call");
-					displayGraph()
+					// displayGraph()
 				} else {
 					return (
 						<div>
@@ -1329,19 +1265,19 @@ class Companylist extends Component {
 				console.log("Error getting documents: ", error);
 			});
 
-		var setLoader = (isLoaded) => {
+		let setLoader = (isLoaded) => {
 			this.setState({
 				isLoaded: isLoaded
 			})
 		}
 
-		var setTheState = (companyData) => {
+		let setTheState = (companyData) => {
 			this.setState({
 				companyData: companyData,
 				isLoaded: true
 			})
 		}
-		var displayGraph = () => {
+		let displayGraph = () => {
 			console.log("companyData before:", this.state.companyData);
 			console.log("companyData:", this.state.companyData);
 			let firstCompanySymbol = this.state.companyData[0];
@@ -1351,9 +1287,7 @@ class Companylist extends Component {
 	}
 
 	render() {
-
 		const { isLoaded } = this.state;
-
 		if (!isLoaded) {
 			return (
 				<center>
@@ -1366,7 +1300,6 @@ class Companylist extends Component {
 					{this.displayCompanyList()}
 				</div>
 			)
-
 		} else {
 			return (
 				<div>
@@ -1375,7 +1308,6 @@ class Companylist extends Component {
 			);
 		}
 	}
-
 }
 
 

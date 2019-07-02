@@ -72,20 +72,20 @@ class SignUp extends Component {
     .auth()
     .createUserWithEmailAndPassword(email, password).then((u)=>{
       console.log("u:",u)
-    if(!this.state.username){
+    if (!this.state.username) {
       swal("Please, Enter Username", "","error");
     }
       swal("Signup sucessfully", "","success");
       this.props.history.push("/login");
     }).catch((error) => {
       console.log("error===========>",error);
-      if(error.code === "auth/weak-password"){
+      if (error.code === "auth/weak-password") {
         swal("Enter Strong Password","Password should be at least 6 characters","error");
-      } else if(error.code === "auth/email-already-in-use"){
+      } else if (error.code === "auth/email-already-in-use") {
         swal("Email already registerd", "", "error");
-      } else if(error.code === "auth/invalid-email"){
+      } else if (error.code === "auth/invalid-email") {
         swal("Enter valid Email", "", "error");
-      } else if(error.code === "Cannot read property 'users' of undefined"){
+      } else if (error.code === "Cannot read property 'users' of undefined") {
         swal("Please, Enter Username", "","error");
       }
     });
@@ -93,8 +93,11 @@ class SignUp extends Component {
 
   /**username and password validation */
   isDisabled(){
-    if(!this.state.username || !this.state.password || !(this.state.password.length >='6'))
-    return true;  
+    if (!this.state.username || !this.state.password || !(this.state.password.length >='6')) {
+      return true;  
+    } else {
+      return false;
+    }
   }
   
     render() {
