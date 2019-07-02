@@ -6,7 +6,7 @@ You can find the most recent version of this guide [here](https://github.com/fac
 ## Table of Contents
 
 - [About-this-project](#About-this-project)
-    - [what is stock-price-viewer-app?](#what-is-twitter-feed-app?)
+    - [what is stock-price-viewer-app?](#what-is-Stock-price-viewer-app?)
 - [Updating to New Releases](#updating-to-new-releases)
 - [Sending Feedback](#sending-feedback)
 - [Folder Structure](#folder-structure)
@@ -136,7 +136,6 @@ my-app/
     Sign-up.js,
     Login.js,
     Login.css
-    /
     Firebase.js
     service.js
     config.js
@@ -1649,4 +1648,4 @@ If you have ideas for more “How To” recipes that should be on this page, [le
 
 ## Dependancies
 
-* Open package.json to see all development and production dependencies or run npm ls in the project     root directory for all installed dependencies
+* Open package.json to see all development and production dependencies or run npm ls in the project  root directory for all installed dependencies

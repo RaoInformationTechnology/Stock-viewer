@@ -26,7 +26,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import API from '../service';
 
-let options = {
+const options = {
 	chart: {
 		stacked: false,
 		zoom: {
@@ -572,6 +572,7 @@ class Companylist extends Component {
 						<Table>
 							<TableHead>
 								<TableRow>
+									{/** */}
 									<TableCell>Date</TableCell>
 									<TableCell>{this.state.firstCompany}</TableCell>
 									<TableCell>{this.state.selectedCompany}</TableCell>
