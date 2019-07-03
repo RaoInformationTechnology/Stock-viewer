@@ -26,6 +26,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import API from '../service';
 
+
 const options = {
 	chart: {
 		stacked: false,
@@ -254,12 +255,13 @@ class Companylist extends Component {
 		this.unsubscribe = this.ref.onSnapshot(this.getCompany);
 	}
 
-	/**get name or symbol of search company */
+	/**@param {object} event get name or symbol of search company */
 	getSearchValue(event) {
+		
 		this.setState({ value: event.target.value, searchValue: event.target.value });
 	}
 
-	/**validation of search button */
+	/**@param {object} event validation of search button */
 	submitSearchValue(event) {
 		this.setState({ value: '', isLoaded: false });
 		/**validation for search input */
@@ -274,7 +276,7 @@ class Companylist extends Component {
 		}
 	}
 
-	/**call add company function and get name and symbol of add company */
+	/**@param {object} data call add company function and get name and symbol of add company */
 	addCompanytoWatchlist(data) {
 		console.log('data: ', data);
 		this.setState({ companySymbol: data['1. symbol'], companyName: data['2. name'] });
@@ -283,13 +285,13 @@ class Companylist extends Component {
 	}
 
 	/**
-	 * @param {*} companySymbol wise display historical data table 
+	 * @param {string} companySymbol wise display historical data table 
 	 */
 	displayHistoricalData(companySymbol) {
-		const historicalData = {
-			symbol: companySymbol
-		}
+		const historicalData =  companySymbol
+		console.log("historical data:",historicalData);
 		console.log("symbol of selected company==============>", companySymbol);
+		console.log("type:",typeof companySymbol)
 		this.setState({ isSelectHistorical: true, isSelectinterval: false, historicalArray: [], isComparedCompany: false })
 		API.displayHistoricalData(historicalData)
 			.then((res, err) => {
@@ -314,26 +316,6 @@ class Companylist extends Component {
 					swal('internal server error');
 				}
 			});
-		// const url = config.getBaseUrl() + "TIME_SERIES_DAILY_ADJUSTED&symbol=" + companySymbol + config.getBaseUrlForKey();
-		// fetch(url)
-		// 	.then(res => res.json())
-		// 	.then(res => {
-		// 		const originalObject = res['Time Series (Daily)'];
-		// 		console.log('originalObject: ', originalObject);
-		// 		for (let key in originalObject) {
-		// 			this.state.historicalArray.push({
-		// 				date: key,
-		// 				open: originalObject[key]['1. open'],
-		// 				high: originalObject[key]['2. high'],
-		// 				low: originalObject[key]['3. low'],
-		// 				close: originalObject[key]['4. close'],
-		// 				adjclose: originalObject[key]['5. adjusted close'],
-		// 				volume: originalObject[key]['6. volume']
-		// 			})
-		// 		}
-		// 		console.log("historicalArray==========>", this.state.historicalArray);
-		// 		this.setState({ isSelectHistorical: true })
-		// 	}).catch((err) => { swal('internal server error'); })
 	}
 
 	/** selected symbol to add in watchlist */
@@ -358,12 +340,14 @@ class Companylist extends Component {
 	}
 
 	/**
-	 * @param {*} companyName already add or not 
+	 * @param {string} companyName already add or not 
 	 */
 	checkIfalreadyAddOrNot = (companyName) => {
+		this.state.isSearchClick = false;
+		this.state.isOpenCompanyList = false;
 		console.log('getcompany:');
 		localStorage.getItem('email1')
-		let email = localStorage.email1;
+		const email = localStorage.email1;
 		console.log(companyName)
 		let companyData = [];
 		/**it's check selected company already added into database or not */
@@ -387,6 +371,7 @@ class Companylist extends Component {
 					swal("Already added!", "", "info")
 						.then((willDelete) => {
 							if (willDelete) {
+								console.log("helooooooooooooooooooooo");       							
 								window.location.reload();
 							}
 						})
@@ -459,7 +444,6 @@ class Companylist extends Component {
 
 	/**display graph of selected interval */
 	displayGraphOfInterval() {
-
 		let graphSeries = this.state.intervalArray;
 		let ts2 = 1484418600000;
 		this.state.intervalData = [];
@@ -500,19 +484,23 @@ class Companylist extends Component {
 				try {
 					this.setState({ isComparedCompany: true, firstCompany: prop, isIndicatorGraph: false, selectedCompany: event.target.value })
 					const originalObject = res['Time Series (5min)'];
-					console.log("res==========>", originalObject);
-					for (let key in originalObject) {
-						this.state.comparisonArray1.push({
-							date: key,
-							open: originalObject[key]['1. open'],
-							high: originalObject[key]['2. high'],
-							low: originalObject[key]['3. low'],
-							close: originalObject[key]['4. close'],
-							volume: originalObject[key]['5. volume']
-						})
-					}
-					console.log("comparison Array1=======>", this.state.comparisonArray1);
-					this.comparedCompanyData();
+                    console.log("res==========>", originalObject);
+                    if (originalObject) {
+                        for (let key in originalObject) {
+                            this.state.comparisonArray1.push({
+                                date: key,
+                                open: originalObject[key]['1. open'],
+                                high: originalObject[key]['2. high'],
+                                low: originalObject[key]['3. low'],
+                                close: originalObject[key]['4. close'],
+                                volume: originalObject[key]['5. volume']
+                            })
+                        }
+                        console.log("comparison Array1=======>", this.state.comparisonArray1);
+                        this.comparedCompanyData();
+                    } else {
+                        swal("Internal Server Error")
+                    }
 				} catch (err) {
 					console.log("err:", err)
 					swal('internal server error');
@@ -520,7 +508,6 @@ class Companylist extends Component {
 			});
 		console.log("this.state.isComparedCompany:", this.state.isComparedCompany);
 	}
-
 
 	/**get data of first selected company  */
 	comparedCompanyData = () => {
@@ -536,18 +523,20 @@ class Companylist extends Component {
 					} else {
 						const originalObjectforDisplay = res['Time Series (5min)'];
 						console.log("originalObject===========>", originalObjectforDisplay);
-						for (let key in originalObjectforDisplay) {
-							selectedCompany.push({
-								date: key,
-								open: originalObjectforDisplay[key]['1. open'],
-								high: originalObjectforDisplay[key]['2. high'],
-								low: originalObjectforDisplay[key]['3. low'],
-								close: originalObjectforDisplay[key]['4. close'],
-								volume: originalObjectforDisplay[key]['5. volume']
-							})
+						if (originalObjectforDisplay) {
+							for (let key in originalObjectforDisplay) {
+								selectedCompany.push({
+									date: key,
+									open: originalObjectforDisplay[key]['1. open'],
+									high: originalObjectforDisplay[key]['2. high'],
+									low: originalObjectforDisplay[key]['3. low'],
+									close: originalObjectforDisplay[key]['4. close'],
+									volume: originalObjectforDisplay[key]['5. volume']
+								})
+							}
+							this.setState({ comparisonArray2: selectedCompany })
+							console.log("comparison Array2=======>", this.state.comparisonArray2);
 						}
-						this.setState({ comparisonArray2: selectedCompany })
-						console.log("comparison Array2=======>", this.state.comparisonArray2);
 					}
 					/**selecte other company then call below function */
 					if (this.state.comparisonArray2.length && this.state.comparisonArray1.length) {
@@ -563,8 +552,20 @@ class Companylist extends Component {
 	displayGraphOfComparison() {
 		if (this.state.comparisonArray1.length && this.state.comparisonArray2.length) {
 			this.state.comparisonOfVolume = [];
-			for (let i = 0; i < this.state.comparisonArray1.length; i++) {
-				this.state.comparisonOfVolume.push({ date: this.state.comparisonArray1[i].date, diffrence: this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume, first: this.state.comparisonArray2[i].volume, second: this.state.comparisonArray1[i].volume });
+			console.log("length1:::",this.state.comparisonArray1.length);
+			console.log("length2:::",this.state.comparisonArray2.length);
+			if (this.state.comparisonArray1.length > this.state.comparisonArray2.length) {
+				for (let i = 0; i < this.state.comparisonArray2.length; i++) {
+					console.log("volume1:",this.state.comparisonArray1[i].volume);
+					console.log("volume2:",this.state.comparisonArray2[i].volume)
+					this.state.comparisonOfVolume.push({ date: this.state.comparisonArray1[i].date, diffrence: this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume, first: this.state.comparisonArray2[i].volume, second: this.state.comparisonArray1[i].volume });
+				} 
+			} else {
+				for (let i = 0; i < this.state.comparisonArray1.length; i++) {
+					console.log("volume1:",this.state.comparisonArray1[i].volume);
+					console.log("volume2:",this.state.comparisonArray2[i].volume)
+					this.state.comparisonOfVolume.push({ date: this.state.comparisonArray1[i].date, diffrence: this.state.comparisonArray2[i].volume - this.state.comparisonArray1[i].volume, first: this.state.comparisonArray2[i].volume, second: this.state.comparisonArray1[i].volume });
+				} 
 			}
 			return (
 				<div>
@@ -572,7 +573,6 @@ class Companylist extends Component {
 						<Table>
 							<TableHead>
 								<TableRow>
-									{/** */}
 									<TableCell>Date</TableCell>
 									<TableCell>{this.state.firstCompany}</TableCell>
 									<TableCell>{this.state.selectedCompany}</TableCell>
@@ -580,6 +580,7 @@ class Companylist extends Component {
 								</TableRow>
 							</TableHead>
 							<TableBody>
+								{/**display table of compared comapany data */}
 								{this.state.comparisonOfVolume.map(data => (
 									<TableRow key={data.diffrence}>
 										<TableCell>{data.date}</TableCell>
@@ -612,11 +613,15 @@ class Companylist extends Component {
 					console.log("result:", ['Technical Analysis: ' + [event.target.value]]);
 					console.log("originalObject:", originalObject);
 					console.log("isIndicatorGraph:", this.state.isIndicatorGraph);
-					for (let key in originalObject) {
-						this.state.indicatorDataArray.push({
-							date: key,
-							indicatorObj: originalObject[key][event.target.value],
-						})
+					if (originalObject) {
+						for (let key in originalObject) {
+							this.state.indicatorDataArray.push({
+								date: key,
+								indicatorObj: originalObject[key][event.target.value],
+							})
+						}
+					} else {
+						swal('internal server error')
 					}
 					console.log("indicatorDataArray:", this.state.indicatorDataArray);
 					this.displayGraphOfIndicator()
@@ -707,6 +712,7 @@ class Companylist extends Component {
 			data: this.state.indicatorGraphData
 		},
 		]
+		/**display graph of selected indicator */
 		let chartrender =
 			<div id="chart">
 				<ReactApexChart options={options} series={series} type="area" height="500" />
@@ -719,11 +725,7 @@ class Companylist extends Component {
 
 	/**display watchlist and graph or search list */
 	displayCompanyList() {
-
-		console.log("isIndicatorGraph:", this.state.isIndicatorGraph);
-		console.log("isIntervalValue:", this.state.isIntervalValue);
 		const { date } = this.state;
-
 		/**any company added into current user watchlist */
 		if (this.state.grapharray.length) {
 			console.log('hey i m called');
@@ -743,6 +745,7 @@ class Companylist extends Component {
 				data: graphData
 			},
 			]
+			/**display graph of selected company */
 			var chartrender =
 				<div id="chart">
 					<ReactApexChart options={options} series={series} type="area" height="450" />
@@ -753,6 +756,7 @@ class Companylist extends Component {
 					<span style={{ color: 'gray' }}>Volume: </span> <span style={{ marginRight: 10 }}>{this.state.volume}</span>
 				</div>
 		}
+		/**it's display graph or serch response table */
 		let showGraphOrSearchResult = this.state.searchResponse.length ? <div>
 			<center><h3>Search Response....</h3></center>
 			{this.state.searchResponse.map(data =>
@@ -815,6 +819,7 @@ class Companylist extends Component {
 				</TextField>
 
 			</span>) : ('')}
+			{/**when select historical data at that time display table */}
 			{this.state.isSelectHistorical ? (<div>
 				<Paper>
 					<Table size="small">
@@ -847,6 +852,7 @@ class Companylist extends Component {
 			</div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>{this.displayGraphOfInterval()}</div> : <div>{this.state.isIndicatorGraph ? <div>{this.displayGraphOfIndicator()}</div> : <div>{this.state.isComparedCompany ? <div>{this.displayGraphOfComparison()}</div> : <div>{chartrender}</div>}</div>}</div>}</div>
 				: <div></div>}</div>)}</div>
 			: 'No data found')
+			/**display watchlist company list */
 		let displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
 			<List key={company.key} className="cursorClass">
 				<ListItem onClick={() => this.displaySelectedCompanyGraph(company)}>
@@ -859,6 +865,7 @@ class Companylist extends Component {
 				</ListItem>
 			</List>
 		)} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
+	    /**dispaly graph or search list and no company added or search then dispaly 'no data found' */
 		let displayData = this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
 
 		/**when searchbar is open but not enter a value */
@@ -1120,7 +1127,7 @@ class Companylist extends Component {
 	};
 
 	/**
-	 * @param {*} id wise delete company from watchlist 
+	 * @param {string} id wise delete company from watchlist 
 	 */
 	deleteCompany(id) {
 		firebase.firestore().collection('company').doc(id).delete().then(() => {
@@ -1136,7 +1143,7 @@ class Companylist extends Component {
 	}
 
 	/**
-	 * @param {*} data wise display graph 
+	 * @param {object} data wise display graph 
 	 */
 	displaySelectedCompanyGraph(data) {
 		this.state.isSelectHistorical = false;
@@ -1157,15 +1164,19 @@ class Companylist extends Component {
 						swal("Click after a minute");
 					} else {
 						const originalObject = res['Time Series (5min)'];
-						for (let key in originalObject) {
-							grapharray.push({
-								date: key,
-								open: originalObject[key]['1. open'],
-								high: originalObject[key]['2. high'],
-								low: originalObject[key]['3. low'],
-								close: originalObject[key]['4. close'],
-								volume: originalObject[key]['5. volume']
-							})
+						if (originalObject) {
+							for (let key in originalObject) {
+								grapharray.push({
+									date: key,
+									open: originalObject[key]['1. open'],
+									high: originalObject[key]['2. high'],
+									low: originalObject[key]['3. low'],
+									close: originalObject[key]['4. close'],
+									volume: originalObject[key]['5. volume']
+								})
+							}
+						} else {
+							swal('internal server error');
 						}
 						console.log('grapharray: ', grapharray);
 						if (!grapharray.length) {
@@ -1202,14 +1213,11 @@ class Companylist extends Component {
 		firebase
 			.auth()
 			.signOut().then(function () {
-				// console.log("props==========>",this.props);
-				// this.props.history.push("/")
 				console.log('Signed Out');
-				localStorage.getItem('email1');
-				console.log(localStorage);
 				localStorage.clear();
 				localStorage.removeItem('email1');
 				console.log(localStorage);
+				// history.push('/')
 				window.location.hash = "/"
 			}, function (error) {
 				swal('internal server error');

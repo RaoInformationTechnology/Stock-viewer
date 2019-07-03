@@ -11,6 +11,7 @@ import IconButton from '@material-ui/core/IconButton';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import history from '../History';
 // visibility
 
 class Login extends Component {
@@ -72,17 +73,20 @@ class Login extends Component {
       // console.log("props::::::::::::::::::::::::",this.props);
       // this.props.history.push("/Company-list");
       // console.log("props::::::::::::::::::::::::=================================>",this.props);
+      // this.props.history.push('/Company-list')
       window.location.hash='/Company-list'
     }).catch((error) => {
       console.log('hey error: ', error);
       if (error.code === "auth/user-not-found") {
         swal("Email not found","Please, Signup","error");
-      } else {
+      } else if (error.code === " auth/wrong-password") {
         swal("Please Enter correct password","","error");
+      } else {
+        swal("Internal Server Error");
       }
     })
   };
-
+ 
   render() {
     const {email, password} = this.state;
     return (

@@ -75,6 +75,7 @@ class SignUp extends Component {
         if (!this.state.username) {
           swal("Please, Enter Username", "", "error");
         }
+        console.log("props:::::::::::",this.props)
         swal("Signup sucessfully", "", "success");
         this.props.history.push("/login");
       }).catch((error) => {
@@ -87,6 +88,8 @@ class SignUp extends Component {
           swal("Enter valid Email", "", "error");
         } else if (error.code === "Cannot read property 'users' of undefined") {
           swal("Please, Enter Username", "", "error");
+        } else {
+          swal("Internal Server Error", "", "error");
         }
       });
   };
