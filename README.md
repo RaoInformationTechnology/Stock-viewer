@@ -16,17 +16,13 @@
 
 ```
 +-- /src [components]
-    +--/components
-        +-- /Login 
-            +-- [login activity]
-        +-- /Sign-up 
-            +-- [sign up activity]
-        +--/Company-list
-            +-- [watchlist]
-        +--/service 
-            +-- [for request and response of api call]
-        +--/config 
-            [config file]
+    --/components
+         +-- [components is way to structure projects, is to group similar files together]
+    --/service 
+         +-- [Diffrent general-purpose services/utils that can be used in components or other parts of the API]
+    --/config 
+         +-- [config files to intialize this API,e.g environment variable,db config]
+
 ```
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -237,7 +233,7 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 }
 
 ## What is Sweetalert?
-    * As mentioned in the introduction sweetAlert is a replacement for JavaScript’s window.alert() function that      shows very pretty modal windows. It’s a standalone library that has no dependencies, and it’s made from a       JavaScript file plus a CSS file.
+    * As mentioned in the introduction sweetAlert is a replacement for JavaScript’s window.alert() function that     shows very pretty modal windows. It’s a standalone library that has no dependencies, and it’s made from a      JavaScript file plus a CSS file.
 
 ## Sweetalert version
 {
@@ -245,7 +241,7 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 }
 
 ## What is ReactApexChart?
-    * React-ApexCharts is a wrapper component for ApexCharts ready to be integrated into your react.js application    to create stunning React Charts.
+    * React-ApexCharts is a wrapper component for ApexCharts ready to be integrated into your react.js application   to create stunning React Charts.
 
 ## ReactApexChart version
 {
@@ -253,7 +249,7 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 }
 
 ## What is material-ui?
-    * Material-UI components work in isolation. They are self-supporting, and will only inject the styles they need   to display. They don't rely on any global style-sheets such as normalize.css.
+    * Material-UI components work in isolation. They are self-supporting, and will only inject the styles they       need   to display. They don't rely on any global style-sheets such as normalize.css.
 
 ## material-ui/core version
 {
@@ -262,4 +258,4 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 
 ## Dependancies 
 
-    * Open package.json to see all development and production dependencies or run npm ls in the project root          directory for all installed dependencies.
+    * Open package.json to see all development and production dependencies or run npm ls in the project root         directory for all installed dependencies.
