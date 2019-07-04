@@ -11,18 +11,18 @@ class App extends Component {
 
   render() {
     if (!this.state) {
-            return (
-                <div>
-                <Login />
-                </div>
-                );
-        } else {
-            return (
-                <div>
-                <Companylist />
-                </div>
-                );
-        }
+      return (
+        <div>
+          <Login />
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <Companylist />
+        </div>
+      );
+    }
   }
 }
 

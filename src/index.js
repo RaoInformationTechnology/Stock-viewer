@@ -1,24 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HashRouter, Route } from 'react-router-dom';
+import { HashRouter, Route, Router} from 'react-router-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import Signup from './components/Sign-up';
 import Login from './components/Login';
 import Companylist from './components/Company-list';
-// import { ConnectedRouter} from 'react-router-redux'
-// import createHistory from 'history/createBrowserHistory'
+import createHistory from 'history/createBrowserHistory'
 
-// import history from './History';
-// const history = createHistory()
-
-
+const history = createHistory({
+        hashType: '#' // the default
+      });
+      
 ReactDOM.render(
-        // <ConnectedRouter history={history}>
-                <HashRouter >
+                 <HashRouter  history={history}>
                         <div>
-                                {/* <Router history={history}> */}
                                 <Route exact path='/' component={App} />
                                 <Route path='/sign-up' render={() => (localStorage.getItem('email1') ? (<Route component={Companylist} />)
                                         : (<Route component={Signup} />)
@@ -29,10 +26,11 @@ ReactDOM.render(
                                 <Route path='/Company-list' render={() => (localStorage.getItem('email1') ? (<Route component={Companylist} />)
                                         : (<Route component={Login} />)
                                 )} />
-                                {/* </Router>, */}
+                                 <Route path='/Watch-list' render={() => (localStorage.getItem('email1') ? (<Route component={Companylist} />)
+                                        : (<Route component={Login} />)
+                                )} />
                         </div>
                 </HashRouter>,
-        // </ConnectedRouter>,
         document.getElementById('root')
 );
 
