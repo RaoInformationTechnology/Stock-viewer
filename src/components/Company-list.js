@@ -301,26 +301,32 @@ class Companylist extends Component {
         console.log("type:", typeof companySymbol)
         this.setState({ isSelectHistorical: true, isSelectinterval: false, historicalArray: [], isComparedCompany: false })
         API.displayHistoricalData(historicalData)
-            .then((res, err) => {
+            .then((res) => {
                 try {
                     const originalObject = res['Time Series (Daily)'];
                     console.log('originalObject: ', originalObject);
-                    for (let key in originalObject) {
-                        this.state.historicalArray.push({
-                            date: key,
-                            open: originalObject[key]['1. open'],
-                            high: originalObject[key]['2. high'],
-                            low: originalObject[key]['3. low'],
-                            close: originalObject[key]['4. close'],
-                            adjclose: originalObject[key]['5. adjusted close'],
-                            volume: originalObject[key]['6. volume']
-                        })
+                    if (originalObject) {
+                        for (let key in originalObject) {
+                            this.state.historicalArray.push({
+                                date: key,
+                                open: originalObject[key]['1. open'],
+                                high: originalObject[key]['2. high'],
+                                low: originalObject[key]['3. low'],
+                                close: originalObject[key]['4. close'],
+                                adjclose: originalObject[key]['5. adjusted close'],
+                                volume: originalObject[key]['6. volume']
+                            })
+                        }
+                        console.log("historicalArray==========>", this.state.historicalArray);
+                        this.setState({ isSelectHistorical: true })
+                    } else {
+                        swal('Internal Server Error');
                     }
-                    console.log("historicalArray==========>", this.state.historicalArray);
-                    this.setState({ isSelectHistorical: true })
                 } catch (err) {
                     swal('Internal Server Error');
                 }
+            }).catch((err) => {
+                swal('Internal Server Error')
             })
     }
 
