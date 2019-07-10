@@ -730,9 +730,6 @@ class Companylist extends Component {
             name: 'Stock price',
             data: this.state.indicatorGraphData
         }]
-        // options.yaxis.min = 0;
-        // options.yaxis.max = 250;
-        console.log("options.yaxis.min:", options.yaxis.min)
         /**display graph of selected indicator */
         let chartrender =
             <div id="chart">
@@ -1278,7 +1275,7 @@ class Companylist extends Component {
                     console.log('found data==========>', companyData);
                     setTheState(companyData);
                     console.log("call");
-                    // displayGraph()
+                    displayGraph()
                 } else {
                     return (
                         <div>
