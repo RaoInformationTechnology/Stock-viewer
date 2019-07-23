@@ -1236,9 +1236,9 @@ class Companylist extends Component {
                         } else if (error) {
                             setTimeout(this.setState({ isLoaded: true }), 3000);
                             if (error === 'Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERIES_INTRADAY.') {
-                                swal('No Company Foundg');
+                                swal('No Company Found');
                             } else {
-                                swal('Internal Server Errorcfcvfc')
+                                swal('Internal Server Error')
                             }
                         }
                     }
