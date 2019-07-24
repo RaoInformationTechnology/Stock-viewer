@@ -122,9 +122,7 @@ class SignUp extends Component {
                     variant="outlined"
                     value={username}
                     required
-                    onChange={this.onChange}
-
-                  />
+                    onChange={this.onChange}/>
                 </Grid>
                 <Grid item sm={12} xs={12}>
                   <TextField
@@ -137,9 +135,7 @@ class SignUp extends Component {
                     variant="outlined"
                     value={email}
                     onChange={this.onChange}
-
-                    required
-                  />
+                    required/>
                 </Grid>
                 <Grid item sm={12} xs={12}>
                   <TextField
@@ -158,20 +154,18 @@ class SignUp extends Component {
                           <IconButton
                             edge="end"
                             aria-label="Toggle password visibility"
-                            onClick={this.toggleShow}
-                          >
+                            onClick={this.toggleShow}>
                             {password ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
-
                   />
                 </Grid>
                 <Grid item sm={12} xs={12}>
                   <Button color="primary" type="submit" disabled={this.isDisabled()} variant="contained" size="large" onClick={(e) => this.signUp(e)}>
                     SignUp
-        </Button>
+                  </Button>
                 </Grid>
                 <Divider />
                 <Grid item sm={12}>

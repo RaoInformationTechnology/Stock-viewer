@@ -246,7 +246,7 @@ class Companylist extends Component {
     componentDidMount() {
         this.getCompany();
         this.getDate();
-        this.unsubscribe = this.ref.onSnapshot(this.getCompany);
+        // this.unsubscribe = this.ref.onSnapshot(this.getCompany);
     }
 
 	/**
@@ -418,7 +418,7 @@ class Companylist extends Component {
             .then((res) => {
                 try {
                     this.setState({ isIntervalValue: true, isSelectinterval: true, isSelectHistorical: false, isComparedCompany: false, selectedInterval: prop, graphData: [], isLoaded: true });
-                    let  originalObject = res['Time Series (' + event.target.value + ')'];
+                    let originalObject = res['Time Series (' + event.target.value + ')'];
                     console.log('originalObject: ', originalObject);
                     console.log("interval array======second time===>", this.state.intervalArray);
                     if (originalObject) {
@@ -735,7 +735,7 @@ class Companylist extends Component {
     /** display watchlist and graph or search list */
     displayCompanyList() {
         const { date } = this.state;
-        /**any company added into current user watchlist */
+        /** any company added into current user watchlist */
         if (this.state.grapharray.length) {
             let graphSeries = this.state.grapharray;
             let chartData = 1484418600000;
@@ -751,7 +751,7 @@ class Companylist extends Component {
                 data: graphData
             },
             ]
-            /**display graph of selected company */
+            /** display graph of selected company */
             var chartrender =
                 <div>
                     <div id="chart">
@@ -768,7 +768,7 @@ class Companylist extends Component {
                     </div>
                 </div>
         }
-        /**it's display graph or serch response table */
+        /** it's display graph or serch response table */
         let showGraphOrSearchResult = this.state.searchResponse.length ? <div>
             <center><h3>Search Response....</h3></center>
             {this.state.searchResponse.map(data =>
@@ -836,7 +836,7 @@ class Companylist extends Component {
                         </ul></div>) : ('')}
                 </Grid>
             </Grid>
-            {/**when select historical data at that time display table */}
+            {/** when select historical data at that time display table */}
             {this.state.isSelectHistorical ? (<div>
                 <Paper>
                     <Table size="small">
@@ -869,7 +869,7 @@ class Companylist extends Component {
             </div>) : (<div>{chartrender ? <div>{this.state.isIntervalValue ? <div>{this.displayGraphOfInterval()}</div> : <div>{this.state.isIndicatorGraph ? <div>{this.displayGraphOfIndicator()}</div> : <div>{this.state.isComparedCompany ? <div>{this.displayGraphOfComparison()}</div> : <div>{chartrender}</div>}</div>}</div>}</div>
                 : <div></div>}</div>)}</div>
             : 'No data found')
-        /**display watchlist company list */
+        /** display watchlist company list */
         let displayCompany = this.state.companyData.length ? <div>{this.state.companyData.map(company =>
             <List key={company.key} className="cursorClass">
                 <ListItem onClick={() => this.displaySelectedCompanyGraph(company)}>
@@ -882,10 +882,10 @@ class Companylist extends Component {
                 </ListItem>
             </List>
         )} </div> : <div> <center><p>Add Comapany to watchlist</p></center></div>
-        /**dispaly graph or search list and no company added or search then dispaly 'no data found' */
+        /** dispaly graph or search list and no company added or search then dispaly 'no data found' */
         let displayData = this.state.companyData.length ? <div>{showGraphOrSearchResult}</div> : <div><center><h2>No Company Found</h2></center></div>
 
-        /**when searchbar is open but not enter a value */
+        /** when searchbar is open but not enter a value */
         if (this.state.isOpenSearch && !this.state.isSearchClick) {
             return (
                 <div>
@@ -951,7 +951,7 @@ class Companylist extends Component {
                     </div>
                 </div>
             )
-            /**searchbar is open then it's return */
+            /** searchbar is open then it's return */
         } else if (this.state.isSearchClick) {
             if (!this.state.searchResponse.length) {
                 console.log("========else if ========if======");
@@ -1206,7 +1206,6 @@ class Companylist extends Component {
             .then((res) => {
                 try {
                     const error = res['Error Message']
-                    console.log("result==========================>", error);
                     if (res) {
                         const originalObject = res['Time Series (5min)'];
                         if (originalObject) {
@@ -1236,7 +1235,7 @@ class Companylist extends Component {
                         } else if (error) {
                             setTimeout(this.setState({ isLoaded: true }), 3000);
                             if (error === 'Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERIES_INTRADAY.') {
-                                swal('No Company Found');
+                                swal('There is no data found!');
                             } else {
                                 swal('Internal Server Error')
                             }
